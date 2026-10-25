@@ -52,7 +52,7 @@ jobs:
 
       - name: Pest
         run: |
-          vendor/bin/pest --no-ansi > /tmp/pest.txt 2>&1 || { M=$(grep -v '^\s*$' /tmp/pest.txt | tail -n 80 | head -c 6000 | tr '\n' '|'); echo "::error title=PESTOUT::$M"; exit 1; }
+          vendor/bin/pest > /tmp/pest.txt 2>&1 || { M=$(grep -v '^\s*$' /tmp/pest.txt | tail -n 80 | head -c 6000 | tr '\n' '|'); echo "::error title=PESTOUT::$M"; exit 1; }
 
       - uses: actions/setup-node@v4
         with:
