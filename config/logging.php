@@ -65,6 +65,14 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Průběh nasazení (app:post-deploy). Vždy od úrovně debug, aby šel vidět i při LOG_LEVEL=warning.
+        'deploy' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/deploy.log'),
+            'level' => 'debug',
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),

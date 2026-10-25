@@ -6,12 +6,16 @@ use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: function (): void {
+            Route::middleware([])->group(base_path('routes/ops.php'));
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
@@ -19,6 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->append(SecurityHeaders::class);
+
+        // Healthcheck a URL cron musí odpovídat i během nasazení (údržbový režim).
+        $middleware->preventRequestsDuringMaintenance(except: ['_health', '_cron/*']);
 
         $middleware->alias([
             'two-factor.required' => EnsureTwoFactorEnabled::class,
