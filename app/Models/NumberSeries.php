@@ -7,6 +7,13 @@ use Database\Factories\NumberSeriesFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property DocumentType $doc_type
+ * @property int $next_number
+ * @property int|null $last_year
+ * @property bool $reset_yearly
+ * @property bool $is_default
+ */
 class NumberSeries extends Model
 {
     /** @use HasFactory<NumberSeriesFactory> */

@@ -31,6 +31,16 @@ use Illuminate\Support\Facades\DB;
  * @property string $paid_total
  * @property string $discount_percent
  * @property bool $round_total
+ * @property Carbon|null $issue_date
+ * @property Carbon|null $taxable_date
+ * @property Carbon|null $due_date
+ * @property Carbon|null $valid_until
+ * @property Carbon|null $paid_at
+ * @property Carbon|null $sent_at
+ * @property Carbon|null $locked_at
+ * @property array<string, mixed>|null $buyer_snapshot
+ * @property array<string, mixed>|null $supplier_snapshot
+ * @property array<string, mixed>|null $bank_account_snapshot
  */
 class Document extends Model
 {
