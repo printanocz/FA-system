@@ -29,6 +29,13 @@ it('creates the invoice and quote series', function () {
         ->and($invoice->reset_yearly)->toBeTrue();
 });
 
+it('names the series', function () {
+    seedInitialSetup();
+
+    expect(NumberSeries::defaultFor(DocumentType::Invoice)->name)->toBe('Faktury vydané')
+        ->and(NumberSeries::defaultFor(DocumentType::Quote)->name)->toBe('Cenové nabídky');
+});
+
 it('sets the default document values', function () {
     seedInitialSetup();
 
@@ -39,7 +46,7 @@ it('sets the default document values', function () {
         ->and($settings->constantSymbol())->toBe('0308')
         ->and($settings->roundTotal())->toBeFalse()
         ->and($settings->textBefore())->toBe('Fakturuji Vám za dodané služby:')
-        ->and($settings->textAfter())->toContain('úrok z prodlení');
+        ->and($settings->textAfter())->toBe('Dovoluji si Vás upozornit, že v případě nedodržení data splatnosti uvedeného na faktuře Vám mohu účtovat zákonný úrok z prodlení.');
 });
 
 it('can run twice without duplicating anything', function () {

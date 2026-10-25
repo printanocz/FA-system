@@ -15,6 +15,7 @@ class NumberSeriesFactory extends Factory
     public function definition(): array
     {
         return [
+            'name' => 'Faktury vydané',
             'doc_type' => DocumentType::Invoice,
             'prefix' => '',
             'format' => '{YYYY}{NNN}',
@@ -27,6 +28,14 @@ class NumberSeriesFactory extends Factory
 
     public function forType(DocumentType $type): static
     {
-        return $this->state(['doc_type' => $type]);
+        return $this->state([
+            'doc_type' => $type,
+            'name' => match ($type) {
+                DocumentType::Invoice => 'Faktury vydané',
+                DocumentType::Proforma => 'Zálohové faktury',
+                DocumentType::CreditNote => 'Dobropisy',
+                DocumentType::Quote => 'Cenové nabídky',
+            },
+        ]);
     }
 }

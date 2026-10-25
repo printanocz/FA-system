@@ -61,14 +61,25 @@ final class IssueDocument
             $issued = Carbon::instance($issueDate ?? $document->issue_date ?? Carbon::today())->startOfDay();
             $allocated = $this->numbers->allocate($series, $issued);
 
+            // Délka lhůty z konceptu (splatnost − datum konceptu) se při vystavení zachová.
+            $draftDate = $document->issue_date;
             $document->issue_date = $issued;
             $document->taxable_date ??= $issued;
 
             if ($document->type->isQuote()) {
-                $document->valid_until ??= $issued->copy()->addDays($this->settings->quoteValidityDays());
+                $document->valid_until = $this->term(
+                    $document->valid_until,
+                    $draftDate,
+                    $issued,
+                    $this->settings->quoteValidityDays(),
+                );
             } else {
-                $dueDays = $this->settings->dueDaysFor($contact);
-                $document->due_date ??= $issued->copy()->addDays($dueDays);
+                $document->due_date = $this->term(
+                    $document->due_date,
+                    $draftDate,
+                    $issued,
+                    $this->settings->dueDaysFor($contact),
+                );
                 $document->vs ??= preg_replace('/\D+/', '', $allocated->number);
             }
 
@@ -91,5 +102,24 @@ final class IssueDocument
 
             return $document;
         });
+    }
+
+    /**
+     * Nová splatnost / platnost: datum vystavení + délka lhůty z konceptu. Bez data konceptu
+     * (nebo bez lhůty) se datum ponechá, a když chybí úplně, doplní se výchozí počet dní.
+     */
+    private function term(?Carbon $term, ?Carbon $draftDate, Carbon $issued, int $defaultDays): Carbon
+    {
+        if ($term === null) {
+            return $issued->copy()->addDays($defaultDays);
+        }
+
+        if ($draftDate === null) {
+            return $term;
+        }
+
+        $days = (int) $draftDate->copy()->startOfDay()->diffInDays($term->copy()->startOfDay(), false);
+
+        return $days < 0 ? $term : $issued->copy()->addDays($days);
     }
 }

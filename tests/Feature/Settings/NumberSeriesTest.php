@@ -19,6 +19,16 @@ it('continues from iDoklad: a series set to 61 issues 2026061', function () {
         ->and(issueInvoice(draftInvoice(), '2026-03-11')->number)->toBe('2026062');
 });
 
+it('renames the series', function () {
+    ($this->update)($this->series, ['name' => 'Faktury 2026']);
+
+    expect($this->series->fresh()->name)->toBe('Faktury 2026');
+});
+
+it('requires a name', function () {
+    ($this->update)($this->series, ['name' => '']);
+})->throws(ValidationException::class);
+
 it('changes the prefix and the format', function () {
     ($this->update)($this->series, ['prefix' => 'FA', 'format' => '{YY}{NNNN}']);
 
