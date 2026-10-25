@@ -55,7 +55,7 @@ jobs:
           set +e
           vendor/bin/pest --colors=never tests/Unit/Documents tests/Feature/Documents > pest.txt 2>&1
           code=$?
-          msg=$(grep -v '^\s*$' pest.txt | head -c 30000 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+          msg=$(grep -v -e '^\s*$' -e '✓' pest.txt | head -c 30000 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
           echo "::error title=PESTOUT::$msg"
           exit $code
 
