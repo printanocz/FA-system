@@ -30,7 +30,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     return (
         <NavigationContext.Provider value={{ menuOpen, openMenu: () => setMenuOpen(true) }}>
             <div className="bg-bg text-label font-ui desktop:p-3 flex min-h-dvh gap-7">
-                <Sidebar className="desktop:flex sticky top-3 hidden h-[calc(100dvh-(--spacing(6)))] shrink-0 self-start" />
+                <Sidebar className="desktop:flex sticky top-3 hidden h-[calc(100dvh-(--spacing(6)))] shrink-0 self-start overflow-y-auto" />
                 <main className="desktop:p-0 desktop:pt-5 desktop:pr-5 desktop:pb-10 tablet:p-8 tablet:pb-10 flex min-w-0 flex-1 flex-col gap-6 px-4 pt-[calc(env(safe-area-inset-top)+--spacing(4))] pb-[calc(env(safe-area-inset-bottom)+--spacing(24))]">
                     {children}
                 </main>

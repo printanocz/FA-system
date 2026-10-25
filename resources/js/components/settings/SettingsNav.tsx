@@ -35,7 +35,7 @@ export function SideNav({ current }: { current: SectionId }) {
 /** Na mobilu je navigace seskupený seznam; řádek otevře podstránku sekce (`#sekce`). */
 export function GroupedNav() {
     return (
-        <nav aria-label="Sekce nastavení" className="af-list">
+        <nav aria-label="Sekce nastavení" className="af-list w-full">
             {sections.map((section) =>
                 section.soon ? (
                     <div
