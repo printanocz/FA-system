@@ -33,7 +33,7 @@ final class CreateDraftDocument
             'currency' => 'CZK',
             'language' => 'cs',
             'round_total' => $this->settings->roundTotal(),
-            'discount_percent' => $contact?->default_discount_percent ?? '0.00',
+            'discount_percent' => $contact->default_discount_percent ?? '0.00',
         ];
 
         if ($type->isQuote()) {

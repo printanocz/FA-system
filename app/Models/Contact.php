@@ -10,6 +10,8 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property Carbon|null $ares_synced_at
+ * @property int|null $default_due_days
+ * @property string|null $default_discount_percent
  * @property array<int, string>|null $email_cc
  */
 class Contact extends Model

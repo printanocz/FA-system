@@ -32,7 +32,7 @@ class DocumentSettings
     /** Splatnost kontaktu má přednost před výchozí z Nastavení. */
     public function dueDaysFor(?Contact $contact): int
     {
-        return $contact?->default_due_days ?? $this->dueDays();
+        return $contact->default_due_days ?? $this->dueDays();
     }
 
     /** Výchozí platnost nabídky ve dnech. */
