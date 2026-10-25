@@ -1,8 +1,9 @@
 import { Link, usePage } from '@inertiajs/react';
-import { ClipboardCheck, FileText, House, LayoutGrid, Plus, type LucideIcon } from 'lucide-react';
+import { LayoutGrid, Plus, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import MoreSheet from '@/components/MoreSheet';
 import { useScrollCompact } from '@/hooks/useScrollCompact';
+import { home, sales } from '@/lib/navigation';
 
 type Tab = {
     label: string;
@@ -10,10 +11,13 @@ type Tab = {
     href?: string;
 };
 
+// Cíle a ikony se berou z navigation.ts (jediný zdroj menu); mění se jen zkrácený popisek.
+const [invoices, quotes] = sales;
+
 const tabs: Tab[] = [
-    { label: 'Přehled', icon: House, href: '/' },
-    { label: 'Faktury', icon: FileText },
-    { label: 'Nabídky', icon: ClipboardCheck },
+    { label: home.label, icon: home.icon, href: home.href },
+    { label: 'Faktury', icon: invoices.icon, href: invoices.href },
+    { label: 'Nabídky', icon: quotes.icon, href: quotes.href },
 ];
 
 function TabLabel({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
