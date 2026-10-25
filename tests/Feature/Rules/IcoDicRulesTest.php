@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Validator;
 
 function rulePasses(object $rule, mixed $value): bool
 {
-    return Validator::make(['v' => $value], ['v' => [$rule]])->rulePasses();
+    return Validator::make(['v' => $value], ['v' => [$rule]])->passes();
 }
 
 it('accepts valid IČO', function (string $ico) {

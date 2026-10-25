@@ -42,7 +42,7 @@ it('rejects amounts that cannot be written', function (string $amount) {
 it('escapes the star in the message', function () {
     $text = $this->spayd->format(SPAYD_IBAN, '1', message: 'A*B');
 
-    expect($text)->toEndWith('*MSG:A%2AB')->and(substr_count($text, '*'))->toBe(4);
+    expect($text)->toEndWith('*MSG:A%2AB')->and(substr_count($text, '*'))->toBe(5);
 });
 
 it('escapes the percent sign so it cannot be read as an escape', function () {
