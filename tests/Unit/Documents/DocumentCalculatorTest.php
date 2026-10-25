@@ -238,14 +238,14 @@ it('always satisfies total = subtotal − discount + VAT + rounding', function (
         $lines = [];
         foreach (range(1, mt_rand(1, 6)) as $_) {
             $lines[] = new CalculatorLine(
-                mt_rand(1, 99999) / 10000,
-                mt_rand(0, 9999999) / 100,
-                mt_rand(0, 3000) / 100,
+                number_format(mt_rand(1, 99999) / 10000, 4, '.', ''),
+                number_format(mt_rand(0, 9999999) / 100, 2, '.', ''),
+                number_format(mt_rand(0, 3000) / 100, 2, '.', ''),
                 [0, 12, 21][mt_rand(0, 2)],
             );
         }
 
-        $totals = calc($lines, mt_rand(0, 5000) / 100, (bool) mt_rand(0, 1), (bool) mt_rand(0, 1));
+        $totals = calc($lines, number_format(mt_rand(0, 5000) / 100, 2, '.', ''), (bool) mt_rand(0, 1), (bool) mt_rand(0, 1));
 
         $expected = $totals->subtotal->minus($totals->discountTotal)->plus($totals->vatTotal)->plus($totals->rounding);
 
