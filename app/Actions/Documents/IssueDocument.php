@@ -6,6 +6,7 @@ use App\Domain\Documents\DocumentStatus;
 use App\Domain\Documents\Exceptions\InvalidDocumentStateException;
 use App\Domain\Documents\NumberSeriesService;
 use App\Domain\Documents\PaymentMethod;
+use App\Domain\Settings\DocumentSettings;
 use App\Models\BankAccount;
 use App\Models\CompanyProfile;
 use App\Models\Document;
@@ -20,12 +21,10 @@ use Illuminate\Support\Facades\DB;
  */
 final class IssueDocument
 {
-    /** Výchozí splatnost faktury a platnost nabídky ve dnech, než přijde nastavení (T-04). */
-    public const DEFAULT_DAYS = 14;
-
     public function __construct(
         private readonly NumberSeriesService $numbers,
         private readonly RecalculateDocument $recalculate,
+        private readonly DocumentSettings $settings,
     ) {}
 
     public function __invoke(Document $document, ?CarbonInterface $issueDate = null): Document
@@ -66,9 +65,9 @@ final class IssueDocument
             $document->taxable_date ??= $issued;
 
             if ($document->type->isQuote()) {
-                $document->valid_until ??= $issued->copy()->addDays(self::DEFAULT_DAYS);
+                $document->valid_until ??= $issued->copy()->addDays($this->settings->quoteValidityDays());
             } else {
-                $dueDays = $contact->default_due_days ?? self::DEFAULT_DAYS;
+                $dueDays = $this->settings->dueDaysFor($contact);
                 $document->due_date ??= $issued->copy()->addDays($dueDays);
                 $document->vs ??= preg_replace('/\D+/', '', $allocated->number);
             }

@@ -10,6 +10,8 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property Carbon|null $ares_synced_at
+ * @property int|null $default_due_days
+ * @property string|null $default_discount_percent
  * @property array<int, string>|null $email_cc
  */
 class Contact extends Model
@@ -30,18 +32,21 @@ class Contact extends Model
         ];
     }
 
-    /** Přepíše identifikační a adresní údaje daty z ARES a zapíše čas synchronizace (neukládá). */
+    /** Přepíše identifikační a adresní údaje daty z ARES (DIČ jen když ho ARES vrátí) a zapíše čas synchronizace (neukládá). */
     public function fillFromAres(AresSubject $subject): static
     {
         $this->fill([
             'name' => $subject->name,
             'ico' => $subject->ico,
-            'dic' => $subject->dic,
             'street' => $subject->street,
             'city' => $subject->city,
             'zip' => $subject->zip,
             'country' => $subject->country,
         ]);
+        // ARES DIČ často nevrací (mají ho i neplátci), proto prázdné DIČ stávající nepřepíše.
+        if ($subject->dic !== null) {
+            $this->dic = $subject->dic;
+        }
         $this->ares_synced_at = now();
 
         return $this;
