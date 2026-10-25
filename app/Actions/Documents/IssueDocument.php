@@ -74,6 +74,7 @@ final class IssueDocument
             }
 
             $document->series_id = $series->getKey();
+            $document->setRelation('series', $series);
             $document->number = $allocated->number;
             $document->number_year = $allocated->year;
             $document->number_seq = $allocated->sequence;

@@ -259,7 +259,7 @@ class Document extends Model
         $this->assertDeletable();
 
         return DB::transaction(function (): ?bool {
-            $series = $this->series;
+            $series = $this->series_id === null ? null : NumberSeries::query()->find($this->series_id);
             $year = $this->number_year;
             $sequence = $this->number_seq;
 

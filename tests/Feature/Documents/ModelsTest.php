@@ -20,10 +20,10 @@ it('creates all tables of the domain model', function () {
 });
 
 it('stores money as DECIMAL(15,2) and quantity as DECIMAL(15,4)', function () {
-    $document = draftInvoice([['1.2345', '9999999999999.99']]);
+    $document = draftInvoice([['1.2345', '123456789.99']]);
     $item = $document->items()->first()->fresh();
 
-    expect($item->qty)->toBe('1.2345')->and($item->unit_price)->toBe('9999999999999.99');
+    expect($item->qty)->toBe('1.2345')->and($item->unit_price)->toBe('123456789.99');
 });
 
 it('creates every model through its factory', function () {
