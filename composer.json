@@ -2,7 +2,7 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "printanocz/fa-system",
     "type": "project",
-    "description": "Fakturační aplikace AF Fakturace",
+    "description": "Fakturační aplikace Splatno",
     "keywords": [
         "laravel",
         "framework"
@@ -10,6 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "brick/money": "^0.10",
         "inertiajs/inertia-laravel": "^3.5",
         "laravel/fortify": "^1.25",
         "laravel/framework": "^12.0",
