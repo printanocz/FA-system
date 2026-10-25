@@ -1,11 +1,14 @@
 import { createInertiaApp, type ResolvedComponent } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import AppLayout from '@/layouts/AppLayout';
+import { watchSystemTheme } from '@/lib/theme';
 import '../css/app.css';
 
 type PageModule = { default: ResolvedComponent };
 
 const pages = import.meta.glob<PageModule>('./pages/**/*.tsx', { eager: true });
+
+watchSystemTheme();
 
 void createInertiaApp({
     title: (title) => (title ? `${title} · Splatno` : 'Splatno'),
