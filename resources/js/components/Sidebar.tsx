@@ -60,7 +60,7 @@ export default function Sidebar({ className = '', onNavigate }: SidebarProps) {
         <nav className={`af-sidebar af-glass ${className}`} aria-label="Hlavní menu">
             <div className="af-sidebar__brand">
                 <span className="af-sidebar__mark">AF</span>
-                Fakturace
+                Splatno
             </div>
 
             {sidebarSections.map((section) => (

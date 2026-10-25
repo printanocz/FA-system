@@ -8,7 +8,7 @@ type PageModule = { default: ResolvedComponent };
 const pages = import.meta.glob<PageModule>('./pages/**/*.tsx', { eager: true });
 
 void createInertiaApp({
-    title: (title) => (title ? `${title} · AF Fakturace` : 'AF Fakturace'),
+    title: (title) => (title ? `${title} · Splatno` : 'Splatno'),
     resolve: (name) => {
         const page = pages[`./pages/${name}.tsx`];
         if (!page) {

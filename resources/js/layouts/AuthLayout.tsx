@@ -14,7 +14,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
             <main className="af-card flex w-full max-w-[400px] flex-col gap-6">
                 <div className="af-sidebar__brand justify-center p-0">
                     <span className="af-sidebar__mark">AF</span>
-                    Fakturace
+                    Splatno
                 </div>
                 {children}
             </main>
