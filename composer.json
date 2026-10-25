@@ -11,6 +11,7 @@
     "require": {
         "php": "^8.3",
         "brick/money": "^0.10",
+        "endroid/qr-code": "^6.0",
         "inertiajs/inertia-laravel": "^3.5",
         "laravel/fortify": "^1.25",
         "laravel/framework": "^12.0",
