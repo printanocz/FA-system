@@ -2,6 +2,7 @@
 
 namespace App\Domain\Payments;
 
+use App\Domain\Documents\DocumentType;
 use App\Domain\Payments\Exceptions\InvalidPaymentDataException;
 use App\Models\Document;
 use Endroid\QrCode\Builder\Builder;
@@ -69,8 +70,14 @@ final class QrPaymentService
             variableSymbol: $document->vs,
             constantSymbol: $document->ks,
             dueDate: $document->due_date,
-            message: 'FAKTURA '.$document->number,
+            message: $this->messagePrefix($document->type).' '.$document->number,
             bic: is_string($account['swift'] ?? null) ? $account['swift'] : null,
         );
+    }
+
+    /** Text zprávy pro příjemce podle typu dokladu. */
+    private function messagePrefix(DocumentType $type): string
+    {
+        return $type === DocumentType::Proforma ? 'ZALOHA' : 'FAKTURA';
     }
 }

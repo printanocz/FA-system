@@ -1,10 +1,12 @@
 <?php
 
 use App\Actions\Documents\RecordPayment;
+use App\Domain\Documents\DocumentType;
 use App\Domain\Payments\Exceptions\InvalidPaymentDataException;
 use App\Domain\Payments\QrPaymentService;
 use App\Models\BankAccount;
 use App\Models\Document;
+use App\Models\NumberSeries;
 
 beforeEach(function () {
     $this->qr = app(QrPaymentService::class);
@@ -64,3 +66,11 @@ it('refuses a document without a bank account', function () {
 
     $this->qr->payload($draft->fresh());
 })->throws(InvalidPaymentDataException::class);
+
+it('writes ZALOHA into the message of a proforma invoice', function () {
+    NumberSeries::factory()->forType(DocumentType::Proforma)->create();
+    $proforma = issueInvoice(draftInvoice([[1, 500]], ['type' => DocumentType::Proforma]), '2026-10-25');
+
+    expect($this->qr->payload($proforma))->toEndWith('*MSG:ZALOHA 2026001')
+        ->and($this->qr->payload(qrInvoice()))->toEndWith('*MSG:FAKTURA 2026001');
+});

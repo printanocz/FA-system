@@ -194,6 +194,20 @@ it('does not retry a missing subject', function () {
 });
 
 describe('Contact::fillFromAres', function () {
+    it('keeps the existing VAT number when ARES returns none', function () {
+        $contact = new Contact(['dic' => 'CZ12345678']);
+        $subject = new AresSubject('Nová s.r.o.', '27082440', null, 'Ulice 1', 'Brno', '60200', 'CZ');
+
+        expect($contact->fillFromAres($subject)->dic)->toBe('CZ12345678');
+    });
+
+    it('replaces the VAT number when ARES returns one', function () {
+        $contact = new Contact(['dic' => 'CZ12345678']);
+        $subject = new AresSubject('Nová s.r.o.', '27082440', 'CZ27082440', 'Ulice 1', 'Brno', '60200', 'CZ');
+
+        expect($contact->fillFromAres($subject)->dic)->toBe('CZ27082440');
+    });
+
     it('copies the data and stamps the sync time', function () {
         Carbon::setTestNow('2026-10-26 09:00:00');
         $contact = new Contact(['name' => 'Starý název']);
