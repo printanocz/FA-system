@@ -2,10 +2,16 @@
 
 namespace App\Models;
 
+use App\Services\Ares\AresSubject;
 use Database\Factories\ContactFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon|null $ares_synced_at
+ * @property array<int, string>|null $email_cc
+ */
 class Contact extends Model
 {
     /** @use HasFactory<ContactFactory> */
@@ -22,6 +28,23 @@ class Contact extends Model
             'default_discount_percent' => 'decimal:2',
             'ares_synced_at' => 'datetime',
         ];
+    }
+
+    /** Přepíše identifikační a adresní údaje daty z ARES a zapíše čas synchronizace (neukládá). */
+    public function fillFromAres(AresSubject $subject): static
+    {
+        $this->fill([
+            'name' => $subject->name,
+            'ico' => $subject->ico,
+            'dic' => $subject->dic,
+            'street' => $subject->street,
+            'city' => $subject->city,
+            'zip' => $subject->zip,
+            'country' => $subject->country,
+        ]);
+        $this->ares_synced_at = now();
+
+        return $this;
     }
 
     /**
