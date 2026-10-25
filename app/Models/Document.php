@@ -20,6 +20,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @property DocumentType $type
+ * @property DocumentStatus $status
+ * @property PaymentMethod|null $payment_method
+ * @property string $subtotal
+ * @property string $vat_total
+ * @property string $total
+ * @property string $rounding
+ * @property string $paid_total
+ * @property string $discount_percent
+ * @property bool $round_total
+ */
 class Document extends Model
 {
     /** @use HasFactory<DocumentFactory> */

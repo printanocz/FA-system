@@ -8,6 +8,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property string $qty
+ * @property string $unit_price
+ * @property string $discount_percent
+ * @property string $vat_rate
+ * @property string $line_total
+ */
 class DocumentItem extends Model
 {
     /** @use HasFactory<DocumentItemFactory> */
