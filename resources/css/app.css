@@ -72,6 +72,12 @@
     --blur-*: initial;
     --blur-glass: var(--blur-glass);
 
+    /* Body zlomu z README design systému (mobil < 760, tablet 760–1023, desktop ≥ 1024).
+       Stejné hodnoty drží resources/js/lib/breakpoints.ts. */
+    --breakpoint-*: initial;
+    --breakpoint-tablet: 760px;
+    --breakpoint-desktop: 1024px;
+
     --font-*: initial;
     --font-ui: var(--font-ui);
     --font-mono: var(--font-mono);
