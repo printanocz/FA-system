@@ -328,11 +328,18 @@ describe('number series', function () {
             ->and($series->fresh()->next_number)->toBe(3);
     });
 
-    it('validates the format and the name', function () {
+    it('validates the name', function () {
         $series = NumberSeries::query()->firstOrFail();
 
-        $this->actingAs(settingsUser())->put("/nastaveni/rady/{$series->id}", ['format' => '{YYYY}', 'name' => ''])
-            ->assertSessionHasErrors(['format', 'name']);
+        $this->actingAs(settingsUser())->put("/nastaveni/rady/{$series->id}", ['name' => ''])
+            ->assertSessionHasErrors('name');
+    });
+
+    it('validates the format', function () {
+        $series = NumberSeries::query()->firstOrFail();
+
+        $this->actingAs(settingsUser())->put("/nastaveni/rady/{$series->id}", ['format' => '{YYYY}'])
+            ->assertSessionHasErrors();
     });
 });
 
