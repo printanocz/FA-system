@@ -1,11 +1,78 @@
 @import 'tailwindcss';
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+/*
+ * Design systém „AF Fakturace“ (verze 1). Soubory v ./design jsou převzaté 1:1
+ * z artefaktu design systému a needitují se ručně: změny dělá řídicí chat.
+ * Pořadí: tokens.css → components/bundle.css (třídy af-*).
+ */
+@import './design/tokens.css' layer(base);
+@import './design/bundle.css' layer(components);
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+@source '../views';
+@source '../js';
+
+/* Tmavý režim přes data-theme (stejně jako tokens.css). */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/*
+ * Mapování tokenů do Tailwindu. Hodnoty se nepíšou natvrdo, vše odkazuje na
+ * proměnné z tokens.css. `inline` = utility čtou var(--token) přímo, takže
+ * přepnutí data-theme funguje bez generování duplicitních proměnných.
+ */
+@theme inline {
+    /* Jen barvy z design systému (žádná výchozí paleta Tailwindu). */
+    --color-*: initial;
+    --color-transparent: transparent;
+    --color-current: currentColor;
+
+    --color-bg: var(--bg);
+    --color-surface: var(--surface);
+    --color-surface-2: var(--surface-2);
+    --color-fill: var(--fill);
+    --color-fill-strong: var(--fill-strong);
+    --color-separator: var(--separator);
+    --color-separator-strong: var(--separator-strong);
+    --color-label: var(--label);
+    --color-label-2: var(--label-2);
+    --color-label-3: var(--label-3);
+    --color-accent: var(--accent);
+    --color-on-accent: var(--on-accent);
+    --color-accent-text: var(--accent-text);
+    --color-accent-soft: var(--accent-soft);
+    --color-red: var(--red);
+    --color-red-soft: var(--red-soft);
+    --color-orange: var(--orange);
+    --color-orange-soft: var(--orange-soft);
+    --color-blue: var(--blue);
+    --color-blue-soft: var(--blue-soft);
+    --color-purple: var(--purple);
+    --color-purple-soft: var(--purple-soft);
+    --color-glass: var(--glass);
+    --color-glass-edge: var(--glass-edge);
+    --color-scrim: var(--scrim);
+    --color-focus-ring: var(--focus-ring);
+
+    /* Rozestupy: 1 jednotka = space-1 (4 px); space-11 = 44 px odpovídá 11 jednotkám. */
+    --spacing: var(--space-1);
+
+    --radius-*: initial;
+    --radius-xs: var(--radius-xs);
+    --radius-s: var(--radius-s);
+    --radius-m: var(--radius-m);
+    --radius-l: var(--radius-l);
+    --radius-xl: var(--radius-xl);
+    --radius-full: var(--radius-full);
+
+    --shadow-*: initial;
+    --shadow-glass: var(--shadow-glass);
+    --shadow-card: var(--shadow-card);
+    --shadow-thumb: var(--shadow-thumb);
+    --shadow-sheet: var(--shadow-sheet);
+
+    --blur-*: initial;
+    --blur-glass: var(--blur-glass);
+
+    --font-*: initial;
+    --font-ui: var(--font-ui);
+    --font-mono: var(--font-mono);
 }

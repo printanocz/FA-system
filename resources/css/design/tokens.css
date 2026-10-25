@@ -1,0 +1,98 @@
+/* AF Fakturace — generated from tokens.json */
+:root, [data-theme="light"] {
+  --bg: #F2F4EC;
+  --surface: #FFFFFF;
+  --surface-2: #E7EBDF;
+  --fill: rgba(11,19,10,0.06);
+  --fill-strong: rgba(11,19,10,0.10);
+  --separator: rgba(11,19,10,0.12);
+  --separator-strong: rgba(11,19,10,0.30);
+  --label: #0B130A;
+  --label-2: #4A5346;
+  --label-3: #646D5F;
+  --accent: #62D230;
+  --on-accent: #0B130A;
+  --accent-text: #2E6B14;
+  --accent-soft: #E1F0D3;
+  --red: #B42318;
+  --red-soft: #FBE4E0;
+  --orange: #9A4A00;
+  --orange-soft: #FCEBD6;
+  --blue: #2459A8;
+  --blue-soft: #E2EBF8;
+  --purple: #6C3FB0;
+  --purple-soft: #EEE6F8;
+  --glass: rgba(255,255,255,0.72);
+  --glass-edge: rgba(255,255,255,0.90);
+  --scrim: rgba(11,19,10,0.32);
+  --focus-ring: #2E6B14;
+  --shadow-glass: 0 8px 32px rgba(11,19,10,0.10), 0 1px 3px rgba(11,19,10,0.08);
+  --shadow-card: 0 1px 2px rgba(11,19,10,0.05);
+  --shadow-thumb: 0 1px 3px rgba(11,19,10,0.16), 0 0 0 0.5px rgba(11,19,10,0.06);
+  --shadow-sheet: 0 24px 64px rgba(11,19,10,0.22);
+}
+[data-theme="dark"] {
+  --bg: #040A03;
+  --surface: #121A11;
+  --surface-2: #1C2619;
+  --fill: rgba(242,244,236,0.10);
+  --fill-strong: rgba(242,244,236,0.16);
+  --separator: rgba(242,244,236,0.14);
+  --separator-strong: rgba(242,244,236,0.32);
+  --label: #F2F4EC;
+  --label-2: #B4BBAD;
+  --label-3: #8E9688;
+  --accent: #62D230;
+  --on-accent: #0B130A;
+  --accent-text: #7BDC4E;
+  --accent-soft: #1A3510;
+  --red: #FF8A7A;
+  --red-soft: #3A1512;
+  --orange: #FFB35C;
+  --orange-soft: #3A2408;
+  --blue: #8AB4FF;
+  --blue-soft: #14223A;
+  --purple: #C3A6FF;
+  --purple-soft: #2A1C3E;
+  --glass: rgba(28,38,25,0.70);
+  --glass-edge: rgba(242,244,236,0.12);
+  --scrim: rgba(0,0,0,0.60);
+  --focus-ring: #7BDC4E;
+  --shadow-glass: 0 8px 32px rgba(0,0,0,0.50), 0 1px 3px rgba(0,0,0,0.40);
+  --shadow-card: 0 0 0 1px rgba(242,244,236,0.06);
+  --shadow-thumb: 0 1px 3px rgba(0,0,0,0.5);
+  --shadow-sheet: 0 24px 64px rgba(0,0,0,0.7);
+  color-scheme: dark;
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-11: 44px;
+  --radius-xs: 6px;
+  --radius-s: 10px;
+  --radius-m: 14px;
+  --radius-l: 22px;
+  --radius-xl: 28px;
+  --radius-full: 999px;
+  --blur-glass: 24px;
+  --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "DM Mono", Menlo, Consolas, monospace;
+}
+.large-title { font-family: var(--font-ui); font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: -0.4px; }
+.title-1 { font-family: var(--font-ui); font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -0.3px; }
+.title-2 { font-family: var(--font-ui); font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.2px; }
+.title-3 { font-family: var(--font-ui); font-size: 20px; line-height: 25px; font-weight: 600; letter-spacing: -0.1px; }
+.headline { font-family: var(--font-ui); font-size: 15px; line-height: 20px; font-weight: 600; }
+.body { font-family: var(--font-ui); font-size: 15px; line-height: 20px; font-weight: 400; }
+.callout { font-family: var(--font-ui); font-size: 14px; line-height: 19px; font-weight: 400; }
+.subheadline { font-family: var(--font-ui); font-size: 13px; line-height: 18px; font-weight: 400; }
+.footnote { font-family: var(--font-ui); font-size: 12px; line-height: 16px; font-weight: 400; }
+.caption { font-family: var(--font-ui); font-size: 11px; line-height: 13px; font-weight: 500; letter-spacing: 0.1px; }
+.display-number { font-family: var(--font-ui); font-size: 34px; line-height: 40px; font-weight: 600; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
+.amount { font-family: var(--font-ui); font-size: 15px; line-height: 20px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.doc-number { font-family: var(--font-mono); font-size: 13px; line-height: 18px; font-weight: 400; font-variant-numeric: tabular-nums; }
