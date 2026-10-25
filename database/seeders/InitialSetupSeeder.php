@@ -18,8 +18,8 @@ class InitialSetupSeeder extends Seeder
     public function run(DocumentSettings $settings): void
     {
         // Faktury: 2026061 (bez prefixu). Nabídky: N2026001.
-        $this->series(DocumentType::Invoice, '');
-        $this->series(DocumentType::Quote, 'N');
+        $this->series(DocumentType::Invoice, '', 'Faktury vydané');
+        $this->series(DocumentType::Quote, 'N', 'Cenové nabídky');
 
         $settings->putMissing([
             'due_days' => 14,
@@ -27,15 +27,15 @@ class InitialSetupSeeder extends Seeder
             'constant_symbol' => '0308',
             'round_total' => false,
             'text_before' => 'Fakturuji Vám za dodané služby:',
-            'text_after' => 'V případě prodlení s úhradou účtuji zákonný úrok z prodlení.',
+            'text_after' => 'Dovoluji si Vás upozornit, že v případě nedodržení data splatnosti uvedeného na faktuře Vám mohu účtovat zákonný úrok z prodlení.',
         ]);
     }
 
-    private function series(DocumentType $type, string $prefix): void
+    private function series(DocumentType $type, string $prefix, string $name): void
     {
         NumberSeries::query()->firstOrCreate(
             ['doc_type' => $type->value, 'prefix' => $prefix],
-            ['format' => '{YYYY}{NNN}', 'next_number' => 1, 'reset_yearly' => true, 'is_default' => true],
+            ['name' => $name, 'format' => '{YYYY}{NNN}', 'next_number' => 1, 'reset_yearly' => true, 'is_default' => true],
         );
     }
 }

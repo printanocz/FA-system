@@ -32,12 +32,14 @@ final class UpdateNumberSeries
         }
 
         $data = Validator::make($input, [
+            'name' => ['sometimes', 'required', 'string', 'max:100'],
             'prefix' => ['sometimes', 'nullable', 'string', 'max:20', 'regex:/^[A-Za-z0-9._\/-]*$/'],
             'format' => ['sometimes', 'required', 'string', 'max:50'],
             'next_number' => ['sometimes', 'required', 'integer', 'min:1', 'max:999999999'],
             'reset_yearly' => ['sometimes', 'boolean'],
             'is_default' => ['sometimes', 'boolean'],
         ], attributes: [
+            'name' => 'název',
             'prefix' => 'prefix',
             'format' => 'formát',
             'next_number' => 'další číslo',
