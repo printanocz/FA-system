@@ -25,7 +25,7 @@ final class DeletePayment
                 throw new InvalidDocumentStateException('U stornovaného dokladu nelze úhradu smazat.');
             }
 
-            $last = $document->payments()->get()->last();
+            $last = $document->payments()->reorder()->orderByDesc('paid_at')->orderByDesc('id')->first();
             if ($last === null || $last->getKey() !== $payment->getKey()) {
                 throw new InvalidDocumentStateException('Smazat jde jen poslední úhrada. Nejdřív smažte novější.');
             }

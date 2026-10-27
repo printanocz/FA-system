@@ -37,7 +37,11 @@ final class InvoiceListQuery
         $this->today = $today ?? Carbon::today();
     }
 
-    /** Základ: faktury po filtru roku, odběratele a hledání, ještě bez segmentu. */
+    /**
+     * Základ: faktury po filtru roku, odběratele a hledání, ještě bez segmentu.
+     *
+     * @return Builder<Document>
+     */
     public function base(): Builder
     {
         return Document::query()
@@ -52,13 +56,22 @@ final class InvoiceListQuery
             ->when($this->search !== '', fn (Builder $query) => $this->applySearch($query));
     }
 
-    /** Seznam v aktuálním segmentu. */
+    /**
+     * Seznam v aktuálním segmentu.
+     *
+     * @return Builder<Document>
+     */
     public function list(): Builder
     {
         return $this->withSegment($this->base(), $this->segment);
     }
 
-    /** Výchozí řazení: koncepty nahoře, pak datum vystavení a číslo sestupně. */
+    /**
+     * Výchozí řazení: koncepty nahoře, pak datum vystavení a číslo sestupně.
+     *
+     * @param  Builder<Document>  $query
+     * @return Builder<Document>
+     */
     public function ordered(Builder $query): Builder
     {
         return $query
@@ -110,7 +123,12 @@ final class InvoiceListQuery
         ];
     }
 
-    /** Po splatnosti: otevřená faktura se splatností před dneškem a neuhrazenou částkou. */
+    /**
+     * Po splatnosti: otevřená faktura se splatností před dneškem a neuhrazenou částkou.
+     *
+     * @param  Builder<Document>  $query
+     * @return Builder<Document>
+     */
     public function overdue(Builder $query): Builder
     {
         return $query
@@ -127,6 +145,10 @@ final class InvoiceListQuery
             ->count();
     }
 
+    /**
+     * @param  Builder<Document>  $query
+     * @return Builder<Document>
+     */
     private function withSegment(Builder $query, string $segment): Builder
     {
         return match ($segment) {
@@ -138,7 +160,11 @@ final class InvoiceListQuery
         };
     }
 
-    /** Číslo, odběratel (jméno ze snapshotu i z kontaktu), popis položky a částka. */
+    /**
+     * Číslo, odběratel (jméno ze snapshotu i z kontaktu), popis položky a částka.
+     *
+     * @param  Builder<Document>  $query
+     */
     private function applySearch(Builder $query): void
     {
         $term = $this->search;
