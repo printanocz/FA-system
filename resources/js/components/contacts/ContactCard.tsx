@@ -34,8 +34,8 @@ function Row({
 }) {
     return (
         <div className="af-list__row" style={top ? { alignItems: 'flex-start' } : undefined}>
-            <span className="af-list__label">{label}</span>
-            <span className="af-list__value">{children}</span>
+            <span className="af-list__label !flex-none">{label}</span>
+            <span className="af-list__value min-w-0 flex-1 break-words">{children}</span>
         </div>
     );
 }
