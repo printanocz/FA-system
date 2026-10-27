@@ -8,6 +8,14 @@ type SidebarProps = {
     onNavigate?: () => void;
 };
 
+/** Položka je aktivní na své adrese i na podstránkách (`/adresar/12`); Přehled jen na `/`. */
+function isCurrent(item: NavItem, path: string): boolean {
+    if (!item.href) return false;
+    if (item.href === '/') return path === '/';
+
+    return path === item.href || path.startsWith(`${item.href}/`);
+}
+
 function NavLink({
     item,
     current,
@@ -100,7 +108,7 @@ export default function Sidebar({ className = '', onNavigate }: SidebarProps) {
                         <NavLink
                             key={item.label}
                             item={item}
-                            current={item.href === path}
+                            current={isCurrent(item, path)}
                             onNavigate={onNavigate}
                         />
                     ))}

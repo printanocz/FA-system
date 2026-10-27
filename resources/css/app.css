@@ -143,4 +143,33 @@
             gap: 6px;
         }
     }
+
+    /* Adresář: řádek seznamu kontaktů a avatar (artboard „Adresář“). */
+    .ct-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--label);
+    }
+    .ct-row:hover {
+        background: var(--fill);
+    }
+    .ct-row[aria-current='true'] {
+        background: var(--accent-soft);
+    }
+    .ct-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--fill-strong);
+        display: grid;
+        place-items: center;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--label-2);
+        flex: none;
+    }
 }

@@ -4,12 +4,15 @@ namespace App\Models;
 
 use App\Services\Ares\AresSubject;
 use Database\Factories\ContactFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
  * @property Carbon|null $ares_synced_at
+ * @property Carbon|null $archived_at
  * @property int|null $default_due_days
  * @property string|null $default_discount_percent
  * @property array<int, string>|null $email_cc
@@ -29,7 +32,43 @@ class Contact extends Model
             'default_due_days' => 'integer',
             'default_discount_percent' => 'decimal:2',
             'ares_synced_at' => 'datetime',
+            'archived_at' => 'datetime',
         ];
+    }
+
+    /** @return HasMany<Document, $this> */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class);
+    }
+
+    public function isArchived(): bool
+    {
+        return $this->archived_at !== null;
+    }
+
+    /**
+     * Vyhledávání v adresáři: název, IČO (i s mezerami) a e-mail. Prázdný dotaz nic nefiltruje.
+     *
+     * @param  Builder<Contact>  $query
+     * @return Builder<Contact>
+     */
+    public function scopeSearch(Builder $query, ?string $term): Builder
+    {
+        $term = trim((string) $term);
+
+        if ($term === '') {
+            return $query;
+        }
+
+        $like = '%'.addcslashes($term, '\\%_').'%';
+        $digits = '%'.addcslashes(preg_replace('/\s+/', '', $term) ?? $term, '\\%_').'%';
+
+        return $query->where(function (Builder $query) use ($like, $digits): void {
+            $query->where('name', 'like', $like)
+                ->orWhere('ico', 'like', $digits)
+                ->orWhere('email', 'like', $like);
+        });
     }
 
     /** Přepíše identifikační a adresní údaje daty z ARES (DIČ jen když ho ARES vrátí) a zapíše čas synchronizace (neukládá). */
