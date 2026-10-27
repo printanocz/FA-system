@@ -208,7 +208,7 @@ export function serverToForm(form: ServerForm): InvoiceFormValues {
                       description: item.description,
                       qty: toInput(item.qty),
                       unit: item.unit,
-                      unit_price: toInput(item.unit_price),
+                      unit_price: formatDecimal(item.unit_price),
                       price_item_id: item.price_item_id,
                   }))
                 : [emptyRow()],

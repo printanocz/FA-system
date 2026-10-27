@@ -16,6 +16,7 @@ import {
     formatDecimal,
     isBlankRow,
     newKey,
+    parseNumber,
     toInput,
     type ItemRow,
     type PriceSuggestion,
@@ -381,6 +382,11 @@ function ItemRowEditor({
             aria-label="Cena za jednotku"
             aria-invalid={errors.unit_price ? true : undefined}
             onChange={(event) => onChange({ unit_price: event.target.value })}
+            onBlur={() => {
+                // Po opuštění pole se cena zapíše s mezerami v tisících a haléři: „6 800,00“.
+                const value = parseNumber(row.unit_price);
+                if (value !== null) onChange({ unit_price: formatDecimal(value) });
+            }}
             onKeyDown={(event) => onEnter(event, 'unit_price')}
         />
     );
