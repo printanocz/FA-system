@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Contacts\ContactAresController;
+use App\Http\Controllers\Contacts\ContactController;
 use App\Http\Controllers\Settings\AresController;
 use App\Http\Controllers\Settings\BankAccountController;
 use App\Http\Controllers\Settings\NumberSeriesController;
@@ -19,6 +21,17 @@ Route::get('/nastaveni/dvoufazove-overeni', [TwoFactorSetupController::class, 's
 // Všechno ostatní jen pro přihlášené s potvrzeným 2FA.
 Route::middleware(['auth', 'two-factor.required'])->group(function () {
     Route::get('/', fn () => Inertia::render('Dashboard'))->name('dashboard');
+
+    Route::prefix('adresar')->name('contacts.')->group(function () {
+        Route::get('/', [ContactController::class, 'index'])->name('index');
+        Route::post('/', [ContactController::class, 'store'])->name('store');
+        Route::post('ares', ContactAresController::class)->name('ares');
+        Route::get('{contact}', [ContactController::class, 'index'])->name('show')->whereNumber('contact');
+        Route::put('{contact}', [ContactController::class, 'update'])->name('update')->whereNumber('contact');
+        Route::delete('{contact}', [ContactController::class, 'destroy'])->name('destroy')->whereNumber('contact');
+        Route::post('{contact}/obnovit', [ContactController::class, 'restore'])->name('restore')->whereNumber('contact');
+        Route::post('{contact}/ares', [ContactController::class, 'refreshFromAres'])->name('refresh-ares')->whereNumber('contact');
+    });
 
     Route::prefix('nastaveni')->name('settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'show'])->name('show');
