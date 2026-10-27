@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Contacts\ContactAresController;
 use App\Http\Controllers\Contacts\ContactController;
+use App\Http\Controllers\PriceItems\PriceItemController;
 use App\Http\Controllers\Settings\AresController;
 use App\Http\Controllers\Settings\BankAccountController;
 use App\Http\Controllers\Settings\NumberSeriesController;
@@ -38,6 +39,15 @@ Route::middleware(['auth', 'two-factor.required'])->group(function () {
         Route::delete('{contact}', [ContactController::class, 'destroy'])->name('destroy')->whereNumber('contact');
         Route::post('{contact}/obnovit', [ContactController::class, 'restore'])->name('restore')->whereNumber('contact');
         Route::post('{contact}/ares', [ContactController::class, 'refreshFromAres'])->name('refresh-ares')->whereNumber('contact');
+    });
+
+    Route::prefix('cenik')->name('price-items.')->group(function () {
+        Route::get('/', [PriceItemController::class, 'index'])->name('index');
+        Route::post('/', [PriceItemController::class, 'store'])->name('store');
+        Route::get('hledat', [PriceItemController::class, 'search'])->name('search');
+        Route::put('{priceItem}', [PriceItemController::class, 'update'])->name('update')->whereNumber('priceItem');
+        Route::delete('{priceItem}', [PriceItemController::class, 'destroy'])->name('destroy')->whereNumber('priceItem');
+        Route::post('{priceItem}/obnovit', [PriceItemController::class, 'restore'])->name('restore')->whereNumber('priceItem');
     });
 
     Route::prefix('nastaveni')->name('settings.')->group(function () {
