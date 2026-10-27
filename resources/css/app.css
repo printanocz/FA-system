@@ -199,4 +199,36 @@
         text-align: left;
         cursor: pointer;
     }
+
+    /* Editor faktury: buňky tabulky položek. */
+    .ed-cell {
+        font: inherit;
+        font-size: 14px;
+        height: 36px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--label);
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .ed-cell:hover {
+        background: var(--fill);
+    }
+    .ed-cell:focus {
+        background: var(--surface);
+        outline: 2px solid var(--focus-ring);
+        outline-offset: 0;
+    }
+    .ed-cell[aria-invalid='true'] {
+        outline: 2px solid var(--red);
+        outline-offset: 0;
+    }
+    textarea.ed-text {
+        height: auto;
+        padding: 10px 12px;
+        line-height: 20px;
+        resize: vertical;
+    }
 }

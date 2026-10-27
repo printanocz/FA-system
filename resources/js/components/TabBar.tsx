@@ -82,13 +82,13 @@ export default function TabBar() {
                     </button>
                 </div>
 
-                <button
-                    type="button"
-                    className="af-tabbar__fab cursor-pointer"
+                <Link
+                    href="/faktury/nova"
+                    className="af-tabbar__fab no-underline"
                     aria-label="Nová faktura"
                 >
                     <Plus strokeWidth={2.25} aria-hidden="true" />
-                </button>
+                </Link>
             </nav>
 
             <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} />

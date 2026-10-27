@@ -46,6 +46,8 @@ class HandleInertiaRequests extends Middleware
                     : null,
             ],
             'status' => fn () => $request->session()->get('status'),
+            // Chyba akce, která neskončila validací: { message, href?, label? }.
+            'error' => fn () => $request->session()->get('error'),
         ];
     }
 }

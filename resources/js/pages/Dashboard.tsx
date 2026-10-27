@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import Toolbar from '@/components/Toolbar';
@@ -55,14 +55,13 @@ export default function Dashboard() {
                 </button>
 
                 {/* Na mobilu nahrazuje tlačítko kulaté „Nová faktura“ v TabBaru (jedna zelená plocha). */}
-                <a
+                <Link
                     className="af-btn af-btn--prominent max-tablet:hidden no-underline"
-                    href="#"
-                    onClick={(event) => event.preventDefault()}
+                    href="/faktury/nova"
                 >
                     <Plus strokeWidth={2} aria-hidden="true" />
                     Nová faktura
-                </a>
+                </Link>
             </Toolbar>
         </>
     );

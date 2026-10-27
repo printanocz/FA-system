@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Contacts\ContactAresController;
 use App\Http\Controllers\Contacts\ContactController;
+use App\Http\Controllers\Contacts\ContactLookupController;
+use App\Http\Controllers\Invoices\InvoiceController;
+use App\Http\Controllers\Invoices\InvoiceTotalsController;
 use App\Http\Controllers\PriceItems\PriceItemController;
 use App\Http\Controllers\Settings\AresController;
 use App\Http\Controllers\Settings\BankAccountController;
@@ -30,10 +33,24 @@ Route::get('/nastaveni/dvoufazove-overeni', [TwoFactorSetupController::class, 's
 Route::middleware(['auth', 'two-factor.required'])->group(function () {
     Route::get('/', fn () => Inertia::render('Dashboard'))->name('dashboard');
 
+    Route::prefix('faktury')->name('invoices.')->group(function () {
+        Route::get('nova', [InvoiceController::class, 'create'])->name('create');
+        Route::post('/', [InvoiceController::class, 'store'])->name('store');
+        Route::post('vystavit', [InvoiceController::class, 'issueNew'])->name('issue-new');
+        Route::post('prepocet', InvoiceTotalsController::class)->name('totals');
+        Route::get('{document}', [InvoiceController::class, 'show'])->name('show')->whereNumber('document');
+        Route::get('{document}/upravit', [InvoiceController::class, 'edit'])->name('edit')->whereNumber('document');
+        Route::put('{document}', [InvoiceController::class, 'update'])->name('update')->whereNumber('document');
+        Route::post('{document}/vystavit', [InvoiceController::class, 'issue'])->name('issue')->whereNumber('document');
+        Route::delete('{document}', [InvoiceController::class, 'destroy'])->name('destroy')->whereNumber('document');
+    });
+
     Route::prefix('adresar')->name('contacts.')->group(function () {
         Route::get('/', [ContactController::class, 'index'])->name('index');
         Route::post('/', [ContactController::class, 'store'])->name('store');
         Route::post('ares', ContactAresController::class)->name('ares');
+        Route::get('hledat', [ContactLookupController::class, 'search'])->name('search');
+        Route::post('z-ares', [ContactLookupController::class, 'createFromAres'])->name('create-from-ares');
         Route::get('{contact}', [ContactController::class, 'index'])->name('show')->whereNumber('contact');
         Route::put('{contact}', [ContactController::class, 'update'])->name('update')->whereNumber('contact');
         Route::delete('{contact}', [ContactController::class, 'destroy'])->name('destroy')->whereNumber('contact');
