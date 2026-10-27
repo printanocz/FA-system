@@ -128,7 +128,7 @@ export default function InvoicesIndex({
                 </label>
                 <button
                     type="button"
-                    className="af-btn af-btn--glass af-btn--icon af-btn--lg tablet:hidden cursor-pointer"
+                    className={`af-btn af-btn--glass af-btn--icon af-btn--lg tablet:hidden cursor-pointer ${hasInvoices ? '' : 'hidden'}`}
                     aria-label="Filtr"
                     onClick={() => setFilterOpen(true)}
                 >
