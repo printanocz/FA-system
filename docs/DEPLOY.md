@@ -13,8 +13,8 @@ Merge do `main` aplikaci sám sestaví a nahraje na hosting (Gigaserver, bez SSH
    2. kód: `app`, `bootstrap` (bez `bootstrap/cache/*.php`), `config`, `database`, `lang`, `resources`, `routes`, `public` (bez `public/storage`), `artisan`, `composer.json`, `composer.lock`. U těchto složek se smazané soubory mažou i na serveru. `vendor/` se nahrává jen když se změnil `composer.lock`,
    3. `storage/app/deploy.pending` se SHA commitu (značka „nasazení čeká na dokončení“).
 6. **Nikdy se nenahrává ani nemaže:** `.env`, `storage/` (kromě dvou značek výše a prázdné kostry složek při prvním nasazení), `node_modules`, `tests`, `.git*`.
-7. Cron na serveru každou minutu spustí `schedule:run`, ten `app:post-deploy`. Pokud existuje značka, provede se `migrate --force`, `db:seed --class=InitialSetupSeeder --force` (je idempotentní), `optimize`, `view:cache`, `up`. Pak se SHA zapíše do `storage/app/deployed-version` a značka se smaže. Průběh a čas jsou v `storage/logs/deploy.log`.
-8. Pipeline volá `/_health` každých 15 s (nejdéle 5 minut), dokud verze není ta nová a aplikace není mimo údržbu. Jinak běh selže.
+7. Cron na serveru každou minutu spustí `schedule:run`, ten `app:post-deploy`. Pokud existuje značka, provede se `optimize:clear` (zahodí starou cache konfigurace a tras), `migrate --force`, `db:seed --class=InitialSetupSeeder --force` (je idempotentní), `optimize`, `view:cache`, `up`. Pak se SHA zapíše do `storage/app/deployed-version` a značka se smaže. Průběh a čas jsou v `storage/logs/deploy.log`.
+8. Pipeline volá `/_health` každých 15 s (nejdéle `DEPLOY_WAIT_MINUTES`, výchozí 5 minut), dokud verze není ta nová a aplikace není mimo údržbu. Jinak běh selže.
 
 Selže-li migrace, aplikace **zůstane v údržbě** a značka zůstane, takže se další minutu zkusí znovu (po opravě stačí nahrát opravu přes nový merge, nebo problém odstranit na serveru).
 
@@ -86,7 +86,7 @@ https://splatno.adamfujak.cz/_cron/<CRON_TOKEN>
 
 s intervalem **jedna minuta** (nejkratší, který hosting dovolí). Adresa funguje i během údržby a bez přihlášení, jen s tajným tokenem. Při delším intervalu se nasazení dokončí až po něm.
 
-Pokud hosting dovolí jen delší interval (např. 5 minut), čeká nasazení tak dlouho a healthcheck v pipeline po 5 minutách selže, i když se nasazení později dokončí. V tom případě nahlas řídicímu chatu, upraví se čekání.
+Pokud hosting dovolí jen delší interval (např. 10 minut), nastav v GitHubu repo proměnnou `DEPLOY_WAIT_MINUTES` (viz níže) alespoň na tento interval plus rezervu, jinak healthcheck v pipeline selže, i když se nasazení později dokončí.
 
 ### 6. GitHub secrets
 
@@ -104,7 +104,12 @@ V repu: **Settings → Secrets and variables → Actions → New repository secr
 
 Nešifrované FTP pipeline nikdy nepoužije: `ftp` znamená vynucené TLS a ověřený certifikát. Bez `SFTP_HOST_KEY` se klíč SFTP serveru přijme při každém spojení (workflow na to upozorní); s ním se ověřuje.
 
-Volitelně lze v **Variables** nastavit `APP_URL`, pokud by adresa nebyla `https://splatno.adamfujak.cz`.
+Volitelně lze v **Settings → Secrets and variables → Actions → Variables** nastavit:
+
+| Proměnná | Význam |
+|---|---|
+| `APP_URL` | adresa aplikace, pokud není `https://splatno.adamfujak.cz` (musí být `https://`) |
+| `DEPLOY_WAIT_MINUTES` | jak dlouho pipeline čeká na dokončení nasazení cronem; výchozí 5, nejvýše 30 (kontrola každých 15 s) |
 
 ### 7. První nasazení
 
@@ -121,8 +126,12 @@ Aplikace nemá registraci. Uživatele založ přes jednorázovou stránku:
 2. Otevři `https://splatno.adamfujak.cz/setup?token=<SETUP_TOKEN>`.
 3. Vyplň jméno, e-mail a heslo (nejméně 12 znaků) a vytvoř účet.
 4. Stránka po vytvoření účtu navždy skončí 404 (existuje jen pokud v databázi není žádný uživatel).
-5. **Smaž `SETUP_TOKEN` z `.env`.**
+5. **Smaž `SETUP_TOKEN` z `.env`** a pak spusť Deploy ručně (viz „Změna `.env`“ níže), jinak zůstane token v uložené cache konfigurace.
 6. Přihlas se a zapni dvoufázové ověření.
+
+## Změna `.env` (i smazání `SETUP_TOKEN`)
+
+`.env` se mění ručně na serveru a aplikace běží s uloženou cache konfigurace, takže **po každé úpravě `.env` (i po smazání `SETUP_TOKEN`) spusť Deploy ručně**: Actions → Deploy → Run workflow na `main`. Nový commit není potřeba. Pipeline nahraje značku `deploy.pending`, `app:post-deploy` zahodí a znovu vytvoří cache a změna se projeví.
 
 ## Healthcheck
 

@@ -65,6 +65,8 @@ jobs:
     timeout-minutes: 60
     env:
       APP_URL: ${{ vars.APP_URL || 'https://splatno.adamfujak.cz' }}
+      # Jak dlouho čekat na dokončení nasazení cronem (minuty, výchozí 5, nejvýše 30).
+      DEPLOY_WAIT_MINUTES: ${{ vars.DEPLOY_WAIT_MINUTES || '5' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -173,7 +175,8 @@ jobs:
               echo "set ftp:ssl-protect-data true"
               echo "set ftp:ssl-allow true"
             fi
-            echo "open -u \"$FTP_USER\" \"${FTP_PROTOCOL}://${FTP_HOST}\""
+            # --env-password: heslo z proměnné LFTP_PASSWORD (bez něj by ji lftp ignoroval).
+            echo "open --env-password -u \"$FTP_USER\" \"${FTP_PROTOCOL}://${FTP_HOST}\""
             echo "cd \"$FTP_PATH\""
           } > header.lftp
 
@@ -239,17 +242,25 @@ jobs:
             *) echo "::error::APP_URL musí začínat https://"; exit 1 ;;
           esac
           url="${APP_URL%/}/_health"
-          echo "Čekám na $url (verze ${GITHUB_SHA:0:7}), nejdéle 5 minut. Dokončení provede cron na serveru."
 
-          for attempt in $(seq 1 20); do
+          minutes="$DEPLOY_WAIT_MINUTES"
+          case "$minutes" in
+            ''|*[!0-9]*) echo "::warning::DEPLOY_WAIT_MINUTES není celé číslo, používá se 5."; minutes=5 ;;
+          esac
+          if [ "$minutes" -lt 1 ]; then minutes=5; fi
+          if [ "$minutes" -gt 30 ]; then minutes=30; fi
+          attempts=$((minutes * 4))
+          echo "Čekám na $url (verze ${GITHUB_SHA:0:7}), nejdéle $minutes min. Dokončení provede cron na serveru."
+
+          for attempt in $(seq 1 "$attempts"); do
             body="$(curl -sS --max-time 10 -H "X-Health-Token: $HEALTH_TOKEN" "$url" || true)"
             if echo "$body" | jq -e --arg sha "$GITHUB_SHA" '.version == $sha and .maintenance == false and .db == "ok"' > /dev/null 2>&1; then
               echo "Nasazeno: $body"
               exit 0
             fi
-            echo "[$attempt/20] $(echo "$body" | head -c 300)"
+            echo "[$attempt/$attempts] $(echo "$body" | head -c 300)"
             sleep 15
           done
 
-          echo "::error title=Nasazení nedoběhlo::Healthcheck do 5 minut nepotvrdil verzi ${GITHUB_SHA:0:7}. Aplikace může zůstat v údržbě; viz storage/logs/deploy.log na serveru a docs/DEPLOY.md (Řešení potíží)."
+          echo "::error title=Nasazení nedoběhlo::Healthcheck do $minutes min nepotvrdil verzi ${GITHUB_SHA:0:7}. Aplikace může zůstat v údržbě; viz storage/logs/deploy.log na serveru a docs/DEPLOY.md (Řešení potíží)."
           exit 1

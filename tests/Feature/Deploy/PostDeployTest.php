@@ -53,12 +53,12 @@ it('does nothing without the marker', function () {
         ->and(file_exists($this->dir.'/deployed-version'))->toBeFalse();
 });
 
-it('migrates, seeds, caches and brings the app up when the marker exists', function () {
+it('clears the caches, migrates, seeds, caches and brings the app up when the marker exists', function () {
     file_put_contents($this->dir.'/deploy.pending', "abc123def\n");
 
     $this->artisan('app:post-deploy')->assertSuccessful();
 
-    expect($this->runner->calls)->toBe(['migrate', 'db:seed', 'optimize', 'view:cache', 'up'])
+    expect($this->runner->calls)->toBe(['optimize:clear', 'migrate', 'db:seed', 'optimize', 'view:cache', 'up'])
         ->and($this->runner->parameters['migrate'])->toBe(['--force' => true])
         ->and($this->runner->parameters['db:seed'])->toBe(['--class' => 'Database\Seeders\InitialSetupSeeder', '--force' => true])
         ->and(trim((string) file_get_contents($this->dir.'/deployed-version')))->toBe('abc123def')
@@ -82,7 +82,7 @@ it('is idempotent: the second run finds no marker', function () {
     $this->artisan('app:post-deploy')->assertSuccessful();
     $this->artisan('app:post-deploy')->assertSuccessful();
 
-    expect($this->runner->calls)->toHaveCount(5);
+    expect($this->runner->calls)->toHaveCount(6);
 });
 
 it('keeps the marker, logs the error and puts the app into maintenance when a migration fails', function () {
@@ -94,7 +94,7 @@ it('keeps the marker, logs the error and puts the app into maintenance when a mi
     $log = (string) file_get_contents($this->dir.'/deploy.log');
     expect(file_exists($this->dir.'/deploy.pending'))->toBeTrue()
         ->and(file_exists($this->dir.'/deployed-version'))->toBeFalse()
-        ->and($this->runner->calls)->toBe(['migrate', 'down'])
+        ->and($this->runner->calls)->toBe(['optimize:clear', 'migrate', 'down'])
         ->and($this->runner->calls)->not->toContain('up')
         ->and($log)->toContain('Nasazení selhalo')
         ->and($log)->toContain('migrate skončil kódem 1');
@@ -109,7 +109,7 @@ it('can be retried after a failure', function () {
     $this->runner->calls = [];
     $this->artisan('app:post-deploy')->assertSuccessful();
 
-    expect($this->runner->calls)->toBe(['migrate', 'db:seed', 'optimize', 'view:cache', 'up'])
+    expect($this->runner->calls)->toBe(['optimize:clear', 'migrate', 'db:seed', 'optimize', 'view:cache', 'up'])
         ->and(file_exists($this->dir.'/deploy.pending'))->toBeFalse();
 });
 

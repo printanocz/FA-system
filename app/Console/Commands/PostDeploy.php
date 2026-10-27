@@ -40,7 +40,9 @@ class PostDeploy extends Command
         $log->info('Nasazení začalo', ['sha' => $sha]);
 
         try {
+            // optimize:clear první: migrace a seeder nesmí běžet se starou cache konfigurace a tras z předchozí verze.
             $steps = [
+                ['optimize:clear', []],
                 ['migrate', ['--force' => true]],
                 ['db:seed', ['--class' => InitialSetupSeeder::class, '--force' => true]],
                 ['optimize', []],
