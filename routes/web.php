@@ -5,11 +5,18 @@ use App\Http\Controllers\Settings\BankAccountController;
 use App\Http\Controllers\Settings\NumberSeriesController;
 use App\Http\Controllers\Settings\RecoveryCodesController;
 use App\Http\Controllers\Settings\SettingsController;
+use App\Http\Controllers\SetupController;
 use App\Http\Controllers\TwoFactorSetupController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // Přihlášení, reset hesla a 2FA endpointy registruje Fortify (config/fortify.php).
+
+// Založení prvního uživatele bez SSH: existuje jen s SETUP_TOKEN a prázdnou tabulkou uživatelů.
+Route::middleware('throttle:20,1')->group(function () {
+    Route::get('/setup', [SetupController::class, 'show']);
+    Route::post('/setup', [SetupController::class, 'store']);
+});
 
 // Průvodce nastavením 2FA: stačí přihlášení (jinak by se nikdo nedostal dál).
 Route::get('/nastaveni/dvoufazove-overeni', [TwoFactorSetupController::class, 'show'])
