@@ -180,7 +180,8 @@ final class SaveInvoiceDraft
                 'unit_price' => $number($row['unit_price'] ?? null),
                 'price_item_id' => $text($row['price_item_id'] ?? null),
             ];
-            if ($item['name'] === null && $item['qty'] === null && $item['unit_price'] === null) {
+            // Řádek bez popisu a ceny (jen výchozí počet a jednotka) je prázdný.
+            if ($item['name'] === null && $item['description'] === null && $item['unit_price'] === null) {
                 continue;
             }
             $items[] = $item;
