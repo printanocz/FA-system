@@ -172,4 +172,31 @@
         color: var(--label-2);
         flex: none;
     }
+    /* Ceník: řádek seznamu na mobilu a tlačítko s názvem položky v tabulce. */
+    .pi-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 10px 12px;
+        border: 0;
+        border-radius: 12px;
+        background: transparent;
+        font: inherit;
+        color: var(--label);
+        cursor: pointer;
+    }
+    .pi-row:hover {
+        background: var(--fill);
+    }
+    .pi-name {
+        display: block;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        font: inherit;
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+    }
 }

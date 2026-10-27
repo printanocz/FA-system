@@ -75,7 +75,7 @@ export default function ContactsIndex({
                     </label>
                     <button
                         type="button"
-                        className={`af-btn af-btn--prominent ${isMobile ? 'af-btn--icon' : ''}`}
+                        className={`af-btn ${isMobile ? 'af-btn--glass af-btn--icon af-btn--lg' : 'af-btn--prominent'}`}
                         aria-label={isMobile ? 'Nový kontakt' : undefined}
                         onClick={() => setSheet('new')}
                     >

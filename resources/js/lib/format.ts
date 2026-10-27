@@ -48,3 +48,13 @@ export function initials(name: string): string {
             .join('') || '?'
     );
 }
+
+/** Cena za jednotku vždy s haléři: „400,00 Kč“, „12,50 €“. */
+export function formatPrice(amount: string | number | null | undefined, currency = 'CZK'): string {
+    return new Intl.NumberFormat('cs-CZ', {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(Number(amount ?? 0));
+}

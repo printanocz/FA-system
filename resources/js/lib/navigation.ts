@@ -41,7 +41,7 @@ export const sales: NavItem[] = [
 export const records: NavItem[] = [
     { label: 'Nákup', icon: ShoppingBasket },
     { label: 'Adresář', icon: UserRound, href: '/adresar' },
-    { label: 'Ceník', icon: Tag },
+    { label: 'Ceník', icon: Tag, href: '/cenik' },
     { label: 'Banka', icon: Landmark },
     { label: 'Reporty', icon: ChartColumn },
 ];
