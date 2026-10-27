@@ -61,7 +61,7 @@ class InvoiceController extends Controller
             'due_date' => $document->due_date?->toDateString(),
             'taxable_date' => $document->taxable_date?->toDateString(),
             'order_number' => $document->order_number ?? '',
-            'payment_method' => $document->payment_method?->value ?? PaymentMethod::BankTransfer->value,
+            'payment_method' => $document->payment_method->value ?? PaymentMethod::BankTransfer->value,
             'bank_account_id' => $document->bank_account_id ?? BankAccount::default()?->id,
             'text_before' => $document->text_before ?? '',
             'text_after' => $document->text_after ?? '',
