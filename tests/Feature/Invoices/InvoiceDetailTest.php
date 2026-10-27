@@ -4,6 +4,8 @@ use App\Domain\Documents\DocumentStatus;
 use App\Domain\Documents\DocumentType;
 use App\Domain\Documents\Exceptions\DocumentLockedException;
 use App\Domain\Documents\PaymentMethod;
+use App\Models\BankAccount;
+use App\Models\CompanyProfile;
 use App\Models\Contact;
 use App\Models\Document;
 use App\Models\DocumentItem;
@@ -31,6 +33,7 @@ afterEach(fn () => Carbon::setTestNow());
 
 describe('only invoices are reachable under /faktury/{id}', function () {
     it('answers 404 for a quote on every invoice address', function () {
+        CompanyProfile::current() ?? CompanyProfile::factory()->create();
         NumberSeries::factory()->forType(DocumentType::Quote)->create();
         $quote = Document::factory()->quote()->create();
         DocumentItem::factory()->create(['document_id' => $quote->id]);
@@ -78,6 +81,8 @@ describe('detail', function () {
     });
 
     it('renders the detail of an issued invoice', function () {
+        // Účet s platným IBANem, ať jde sestavit QR Platba (IBAN z továrny je jen vzorový).
+        BankAccount::factory()->default()->create(['iban' => 'CZ6508000000192000145399']);
         $contact = Contact::factory()->create(['name' => 'Pekárna Hrubý s.r.o.', 'ico' => '08765432']);
         $invoice = detailInvoice([[1, 14500], [10, 600], [1, 4000]], attributes: ['contact_id' => $contact->id]);
 

@@ -121,8 +121,9 @@ describe('segments and counts', function () {
 
 describe('filters', function () {
     it('shows the current year by default and lets the user pick another', function () {
-        $current = listInvoice('2026-10-20', '2026-11-03');
+        // Číselná řada nejde vrátit do dřívějšího roku, proto se starší faktura vystavuje první.
         $old = listInvoice('2025-05-10', '2025-05-24');
+        $current = listInvoice('2026-10-20', '2026-11-03');
 
         $this->get('/faktury')->assertInertia(fn (Assert $page) => $page
             ->where('years', [2026, 2025])
@@ -356,8 +357,8 @@ describe('rows', function () {
 
 describe('overdue count in the menu', function () {
     it('shares one number of overdue invoices across all years', function () {
-        seedSegments();
         listInvoice('2025-03-01', '2025-03-15');
+        seedSegments();
 
         $this->get('/faktury')->assertInertia(fn (Assert $page) => $page->where('overdueInvoices', 3));
         $this->get('/')->assertInertia(fn (Assert $page) => $page->where('overdueInvoices', 3));
