@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import type { ContactCardData } from '@/lib/contacts';
 import { documentBadge, documentTypeLabel } from '@/lib/documents';
@@ -121,14 +121,12 @@ export default function ContactCard({
                         Obnovit
                     </button>
                 ) : (
-                    <button
-                        type="button"
-                        className="af-btn af-btn--tinted"
-                        disabled
-                        title="Připravujeme"
+                    <Link
+                        href={`/faktury/nova?kontakt=${contact.id}`}
+                        className="af-btn af-btn--tinted no-underline"
                     >
                         Nová faktura
-                    </button>
+                    </Link>
                 )}
             </div>
 

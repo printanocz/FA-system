@@ -1,4 +1,5 @@
-import { PanelLeft } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { ChevronLeft, PanelLeft } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useNavigation } from '@/layouts/NavigationContext';
@@ -8,6 +9,10 @@ type ToolbarProps = {
     /** Malý řádek nad nadpisem (např. dnešní datum). */
     eyebrow?: string;
     title: string;
+    /** Odkaz zpět nad nadpisem („‹ Faktury vydané“). */
+    back?: { href: string; label: string };
+    /** Doplněk vedle nadpisu (číslo dokladu, štítek stavu). */
+    meta?: ReactNode;
     /** Akce vpravo: přepínače, hledání, tlačítka. Každá obrazovka má vlastní. */
     children?: ReactNode;
 };
@@ -17,7 +22,7 @@ type ToolbarProps = {
  * určuje stránka, komponenta drží rozvržení. Na tabletu (760–1023 px) má vlevo
  * tlačítko, které otevře Sidebar jako sheet; na mobilu je nadpis `large-title`.
  */
-export default function Toolbar({ eyebrow, title, children }: ToolbarProps) {
+export default function Toolbar({ eyebrow, title, back, meta, children }: ToolbarProps) {
     const { menuOpen, openMenu } = useNavigation();
     const isMobile = useMediaQuery(MOBILE_QUERY);
 
@@ -38,7 +43,23 @@ export default function Toolbar({ eyebrow, title, children }: ToolbarProps) {
                 {eyebrow && (
                     <span className="text-label-3 text-[13px] leading-[18px]">{eyebrow}</span>
                 )}
-                <h1 className={`${isMobile ? 'large-title' : 'title-1'} m-0`}>{title}</h1>
+                {back && (
+                    <Link
+                        href={back.href}
+                        className="text-accent-text inline-flex items-center gap-1 self-start text-[13px] leading-[18px] no-underline"
+                    >
+                        <ChevronLeft className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                        {back.label}
+                    </Link>
+                )}
+                {meta ? (
+                    <div className="flex flex-wrap items-center gap-3">
+                        <h1 className={`${isMobile ? 'large-title' : 'title-1'} m-0`}>{title}</h1>
+                        {meta}
+                    </div>
+                ) : (
+                    <h1 className={`${isMobile ? 'large-title' : 'title-1'} m-0`}>{title}</h1>
+                )}
             </div>
             {children}
         </header>
