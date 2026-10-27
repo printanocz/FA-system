@@ -83,6 +83,7 @@ function EditorForm({
         ...values,
         issue_date: czToIso(values.issue_date) ?? values.issue_date,
         due_date: czToIso(values.due_date) ?? values.due_date,
+        show_taxable_date: values.show_duzp,
         taxable_date: values.show_duzp
             ? (czToIso(values.taxable_date) ?? values.taxable_date)
             : null,
@@ -195,7 +196,7 @@ function EditorForm({
 
             <Toolbar
                 title={document ? 'Koncept faktury' : 'Nová faktura'}
-                back={{ href: '/', label: 'Přehled' }}
+                back={{ href: '/faktury', label: 'Faktury vydané' }}
                 meta={<span className="af-badge af-badge--outline">Koncept</span>}
             >
                 <button

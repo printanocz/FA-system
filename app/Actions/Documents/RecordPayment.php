@@ -6,6 +6,7 @@ use App\Domain\Documents\DocumentStatus;
 use App\Domain\Documents\Exceptions\InvalidDocumentStateException;
 use App\Domain\Documents\Exceptions\OverpaymentException;
 use App\Domain\Documents\PaymentMethod;
+use App\Domain\Documents\PaymentState;
 use App\Models\Document;
 use App\Models\Payment;
 use Brick\Math\BigDecimal;
@@ -62,34 +63,10 @@ final class RecordPayment
                 'note' => $note,
             ]);
 
-            $this->syncPaymentState($document);
+            PaymentState::sync($document);
 
             return $payment;
         });
-    }
-
-    /** Přepočítá paid_total, paid_at a stav podle všech úhrad dokladu. */
-    private function syncPaymentState(Document $document): void
-    {
-        $paidTotal = BigDecimal::zero()->toScale(2);
-        $lastPaidAt = null;
-
-        foreach ($document->payments()->get() as $payment) {
-            $paidTotal = $paidTotal->plus(BigDecimal::of($payment->amount));
-            $lastPaidAt = $payment->paid_at;
-        }
-
-        $fullyPaid = $paidTotal->isGreaterThanOrEqualTo(BigDecimal::of($document->total));
-
-        $document->forceFill([
-            'paid_total' => (string) $paidTotal,
-            'paid_at' => $fullyPaid ? $lastPaidAt : null,
-            'status' => match (true) {
-                $fullyPaid => DocumentStatus::Paid,
-                $paidTotal->isPositive() => DocumentStatus::PartiallyPaid,
-                default => $document->status,
-            },
-        ])->save();
     }
 
     private function parseAmount(string|int|BigDecimal $amount): BigDecimal

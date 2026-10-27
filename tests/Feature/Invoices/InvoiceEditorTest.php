@@ -276,11 +276,11 @@ describe('issuing', function () {
 
         $this->get("/faktury/{$document->id}")->assertInertia(fn (Assert $page) => $page
             ->component('Invoices/Show')
-            ->where('document.number', $document->number)
-            ->where('document.vs', $document->vs)
-            ->where('document.total', '1000.00')
-            ->where('document.editable', false)
-            ->has('document.items', 1));
+            ->where('invoice.number', $document->number)
+            ->where('invoice.vs', $document->vs)
+            ->where('invoice.total', '1000.00')
+            ->where('invoice.status', 'issued')
+            ->has('invoice.items', 1));
     });
 
     it('keeps the draft and links to settings when the company is missing', function () {
@@ -467,7 +467,7 @@ describe('deleting a draft', function () {
         $this->post('/faktury', invoicePayload());
         $document = Document::firstOrFail();
 
-        $this->delete("/faktury/{$document->id}")->assertRedirect('/');
+        $this->delete("/faktury/{$document->id}")->assertRedirect('/faktury');
 
         expect(Document::count())->toBe(0)
             ->and(DocumentItem::count())->toBe(0);

@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\Invoices;
 
+use App\Actions\Documents\DuplicateInvoice;
 use App\Actions\Documents\IssueDocument;
 use App\Actions\Documents\SaveInvoiceDraft;
+use App\Domain\Contacts\ContactStatistics;
 use App\Domain\Contacts\ContactSummary;
 use App\Domain\Documents\DocumentStatus;
 use App\Domain\Documents\DocumentType;
 use App\Domain\Documents\Exceptions\DocumentException;
 use App\Domain\Documents\PaymentMethod;
+use App\Domain\Payments\Exceptions\InvalidPaymentDataException;
+use App\Domain\Payments\QrPaymentService;
 use App\Domain\Settings\DocumentSettings;
 use App\Http\Controllers\Controller;
 use App\Models\BankAccount;
@@ -16,6 +20,9 @@ use App\Models\CompanyProfile;
 use App\Models\Contact;
 use App\Models\Document;
 use App\Models\DocumentItem;
+use App\Models\Payment;
+use Brick\Math\BigDecimal;
+use Brick\Math\RoundingMode;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -35,6 +42,7 @@ class InvoiceController extends Controller
             'issue_date' => $today->toDateString(),
             'due_date' => $today->copy()->addDays($settings->dueDaysFor($contact))->toDateString(),
             'taxable_date' => null,
+            'show_taxable_date' => false,
             'order_number' => '',
             'payment_method' => PaymentMethod::BankTransfer->value,
             'bank_account_id' => BankAccount::default()?->id,
@@ -47,28 +55,29 @@ class InvoiceController extends Controller
         ], $settings);
     }
 
-    public function edit(Document $document, DocumentSettings $settings): Response|RedirectResponse
+    public function edit(Document $invoice, DocumentSettings $settings): Response|RedirectResponse
     {
-        if ($blocked = $this->redirectIfNotEditable($document)) {
+        if ($blocked = $this->redirectIfNotEditable($invoice)) {
             return $blocked;
         }
 
-        $document->load(['items', 'contact']);
+        $invoice->load(['items', 'contact']);
 
-        return $this->editor($document, $document->contact, [
-            'contact_id' => $document->contact_id,
-            'issue_date' => $document->issue_date?->toDateString(),
-            'due_date' => $document->due_date?->toDateString(),
-            'taxable_date' => $document->taxable_date?->toDateString(),
-            'order_number' => $document->order_number ?? '',
-            'payment_method' => $document->payment_method->value ?? PaymentMethod::BankTransfer->value,
-            'bank_account_id' => $document->bank_account_id ?? BankAccount::default()?->id,
-            'text_before' => $document->text_before ?? '',
-            'text_after' => $document->text_after ?? '',
-            'note_internal' => $document->note_internal ?? '',
-            'discount_percent' => $document->discount_percent,
-            'round_total' => $document->round_total,
-            'items' => $document->items->map(fn (DocumentItem $item): array => [
+        return $this->editor($invoice, $invoice->contact, [
+            'contact_id' => $invoice->contact_id,
+            'issue_date' => $invoice->issue_date?->toDateString(),
+            'due_date' => $invoice->due_date?->toDateString(),
+            'taxable_date' => $invoice->taxable_date?->toDateString(),
+            'show_taxable_date' => $invoice->show_taxable_date,
+            'order_number' => $invoice->order_number ?? '',
+            'payment_method' => $invoice->payment_method->value ?? PaymentMethod::BankTransfer->value,
+            'bank_account_id' => $invoice->bank_account_id ?? BankAccount::default()?->id,
+            'text_before' => $invoice->text_before ?? '',
+            'text_after' => $invoice->text_after ?? '',
+            'note_internal' => $invoice->note_internal ?? '',
+            'discount_percent' => $invoice->discount_percent,
+            'round_total' => $invoice->round_total,
+            'items' => $invoice->items->map(fn (DocumentItem $item): array => [
                 'name' => $item->name,
                 'description' => $item->description ?? '',
                 'qty' => self::trimQty($item->qty),
@@ -81,18 +90,18 @@ class InvoiceController extends Controller
 
     public function store(Request $request, SaveInvoiceDraft $save): RedirectResponse
     {
-        $document = $save($request->all());
+        $invoice = $save($request->all());
 
-        return redirect()->route('invoices.edit', $document)->with('status', 'Koncept uložen');
+        return redirect()->route('invoices.edit', $invoice)->with('status', 'Koncept uložen');
     }
 
-    public function update(Request $request, Document $document, SaveInvoiceDraft $save): RedirectResponse
+    public function update(Request $request, Document $invoice, SaveInvoiceDraft $save): RedirectResponse
     {
-        if ($blocked = $this->redirectIfNotEditable($document)) {
+        if ($blocked = $this->redirectIfNotEditable($invoice)) {
             return $blocked;
         }
 
-        $save($request->all(), $document);
+        $save($request->all(), $invoice);
 
         return back()->with('status', 'Koncept uložen');
     }
@@ -104,82 +113,141 @@ class InvoiceController extends Controller
     }
 
     /** Vystaví existující koncept; přiložená data formuláře se předtím uloží. */
-    public function issue(Request $request, Document $document, SaveInvoiceDraft $save, IssueDocument $issue): RedirectResponse
+    public function issue(Request $request, Document $invoice, SaveInvoiceDraft $save, IssueDocument $issue): RedirectResponse
     {
-        if ($blocked = $this->redirectIfNotEditable($document)) {
+        if ($blocked = $this->redirectIfNotEditable($invoice)) {
             return $blocked;
         }
 
         if ($request->has('items')) {
-            $document = $save($request->all(), $document);
+            $invoice = $save($request->all(), $invoice);
         }
 
-        return $this->saveAndIssue($document, $issue);
+        return $this->saveAndIssue($invoice, $issue);
     }
 
-    public function destroy(Document $document): RedirectResponse
+    public function destroy(Document $invoice): RedirectResponse
     {
+        $wasDraft = ! $invoice->isLocked();
+
         try {
-            $document->delete();
+            $invoice->delete();
         } catch (DocumentException $e) {
             return back()->with('error', ['message' => $e->getMessage()]);
         }
 
-        return redirect('/')->with('status', 'Koncept smazán');
+        return redirect()->route('invoices.index')->with('status', $wasDraft ? 'Koncept smazán' : 'Faktura smazána');
     }
 
-    /** Dočasný detail jen pro čtení, nahradí ho T-09. */
-    public function show(Document $document): Response
+    /** Kopie faktury jako nový koncept. */
+    public function copy(Document $invoice, DuplicateInvoice $duplicate): RedirectResponse
     {
-        $document->load(['items', 'contact']);
+        $copy = $duplicate($invoice);
+
+        return redirect()->route('invoices.edit', $copy)
+            ->with('status', $invoice->number === null ? 'Koncept zkopírován' : "Koncept vytvořen kopií faktury {$invoice->number}");
+    }
+
+    /** Detail faktury; koncept se místo detailu otevře v editoru. */
+    public function show(Document $invoice, ContactStatistics $statistics): Response|RedirectResponse
+    {
+        if (! $invoice->isLocked() && $invoice->status === DocumentStatus::Draft) {
+            return redirect()->route('invoices.edit', $invoice);
+        }
+
+        $invoice->load(['items', 'payments', 'contact', 'relatedDocument']);
+        $today = Carbon::today();
+        $payments = $invoice->payments;
+        $lastPaymentId = $payments->last()?->id;
+        $contact = $invoice->contact;
+        $canPay = in_array($invoice->status, [DocumentStatus::Issued, DocumentStatus::Sent, DocumentStatus::PartiallyPaid], true)
+            && $invoice->remainingAmount()->isPositive();
+        $overdue = $invoice->computedStatus($today)?->value === 'overdue';
+        $total = BigDecimal::of($invoice->total);
 
         return Inertia::render('Invoices/Show', [
-            'document' => [
-                'id' => $document->id,
-                'number' => $document->number,
-                'status' => $document->status->value,
-                'computed_status' => $document->computedStatus()?->value,
-                'contact' => $document->buyer_snapshot['name'] ?? $document->contact?->name,
-                'issue_date' => $document->issue_date?->toDateString(),
-                'due_date' => $document->due_date?->toDateString(),
-                'vs' => $document->vs,
-                'currency' => $document->currency,
-                'subtotal' => $document->subtotal,
-                'rounding' => $document->rounding,
-                'total' => $document->total,
-                'editable' => ! $document->isLocked() && $document->status === DocumentStatus::Draft,
-                'items' => $document->items->map(fn (DocumentItem $item): array => [
+            'invoice' => [
+                'id' => $invoice->id,
+                'number' => $invoice->number,
+                'status' => $invoice->status->value,
+                'computed_status' => $invoice->computedStatus($today)?->value,
+                'overdue_days' => $overdue && $invoice->due_date !== null
+                    ? (int) $invoice->due_date->copy()->startOfDay()->diffInDays($today, false)
+                    : null,
+                'issue_date' => $invoice->issue_date?->toDateString(),
+                'due_date' => $invoice->due_date?->toDateString(),
+                'taxable_date' => $invoice->taxable_date?->toDateString(),
+                'show_taxable_date' => $invoice->show_taxable_date,
+                'issued_at' => $invoice->locked_at?->toIso8601String(),
+                'sent_at' => $invoice->sent_at?->toIso8601String(),
+                'paid_at' => $invoice->paid_at?->toDateString(),
+                'vs' => $invoice->vs,
+                'ks' => $invoice->ks,
+                'order_number' => $invoice->order_number,
+                'payment_method' => $invoice->payment_method->value ?? PaymentMethod::BankTransfer->value,
+                'currency' => $invoice->currency,
+                'subtotal' => $invoice->subtotal,
+                'discount_percent' => $invoice->discount_percent,
+                'vat_total' => $invoice->vat_total,
+                'rounding' => $invoice->rounding,
+                'total' => $invoice->total,
+                'paid_total' => $invoice->paid_total,
+                'remaining' => (string) $invoice->remainingAmount()->toScale(2),
+                'paid_percent' => $total->isPositive()
+                    ? min(100, BigDecimal::of($invoice->paid_total)->multipliedBy(100)->dividedBy($total, 0, RoundingMode::DOWN)->toInt())
+                    : 0,
+                'text_before' => $invoice->text_before,
+                'text_after' => $invoice->text_after,
+                'supplier' => $invoice->supplier_snapshot,
+                'buyer' => $invoice->buyer_snapshot,
+                'bank_account' => $invoice->bank_account_snapshot,
+                'qr_svg' => $this->qr($invoice),
+                'can_pay' => $canPay,
+                'can_delete' => $this->canDelete($invoice),
+                'items' => $invoice->items->map(fn (DocumentItem $item): array => [
                     'id' => $item->id,
                     'name' => $item->name,
+                    'description' => $item->description,
                     'qty' => self::trimQty($item->qty),
                     'unit' => $item->unit ?? '',
                     'unit_price' => $item->unit_price,
                     'line_total' => $item->line_total,
                 ])->values(),
+                'payments' => $payments->map(fn (Payment $payment): array => [
+                    'id' => $payment->id,
+                    'amount' => $payment->amount,
+                    'paid_at' => $payment->paid_at->toDateString(),
+                    'method' => $payment->method->value,
+                    'note' => $payment->note,
+                    'deletable' => $payment->id === $lastPaymentId,
+                ])->values(),
             ],
+            'contact' => $contact === null ? null : [
+                'id' => $contact->id,
+                'name' => $contact->name,
+                'ico' => $contact->ico,
+                'stats' => $statistics->forContact($contact, $today)->toArray(),
+            ],
+            'related' => $this->related($invoice),
         ]);
     }
 
-    private function saveAndIssue(Document $document, IssueDocument $issue): RedirectResponse
+    private function saveAndIssue(Document $invoice, IssueDocument $issue): RedirectResponse
     {
         try {
-            $document = $issue($document);
+            $invoice = $issue($invoice);
         } catch (DocumentException $e) {
             // Koncept zůstává uložený, uživatel nepřijde o práci.
-            return redirect()->route('invoices.edit', $document)->with('error', IssueFailure::describe($e));
+            return redirect()->route('invoices.edit', $invoice)->with('error', IssueFailure::describe($e));
         }
 
-        return redirect()->route('invoices.show', $document)->with('status', 'Faktura vystavena');
+        return redirect()->route('invoices.show', $invoice)->with('status', 'Faktura vystavena');
     }
 
-    private function redirectIfNotEditable(Document $document): ?RedirectResponse
+    private function redirectIfNotEditable(Document $invoice): ?RedirectResponse
     {
-        if ($document->type !== DocumentType::Invoice) {
-            abort(404);
-        }
-
-        if ($document->isLocked() || $document->status !== DocumentStatus::Draft) {
-            return redirect()->route('invoices.show', $document)
+        if ($invoice->isLocked() || $invoice->status !== DocumentStatus::Draft) {
+            return redirect()->route('invoices.show', $invoice)
                 ->with('error', ['message' => 'Vystavený doklad nejde upravovat.']);
         }
 
@@ -189,12 +257,12 @@ class InvoiceController extends Controller
     /**
      * @param  array<string, mixed>  $form
      */
-    private function editor(?Document $document, ?Contact $contact, array $form, DocumentSettings $settings): Response
+    private function editor(?Document $invoice, ?Contact $contact, array $form, DocumentSettings $settings): Response
     {
         $company = CompanyProfile::current();
 
         return Inertia::render('Invoices/Editor', [
-            'document' => $document === null ? null : ['id' => $document->id],
+            'document' => $invoice === null ? null : ['id' => $invoice->id],
             'form' => $form,
             'contact' => $contact === null ? null : ContactSummary::from($contact),
             'bankAccounts' => BankAccount::query()->orderByDesc('is_default')->orderBy('id')->get()
@@ -211,6 +279,53 @@ class InvoiceController extends Controller
                 'vat_payer' => (bool) $company?->vat_payer,
             ],
         ]);
+    }
+
+    /** Smazat jde koncept nebo poslední neodeslaná a neuhrazená faktura řady (pravidla má Document). */
+    private function canDelete(Document $invoice): bool
+    {
+        try {
+            $invoice->assertDeletable();
+        } catch (DocumentException) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /** QR Platba pro náhled; faktura bez účtu nebo bez zbývající částky ji nemá. */
+    private function qr(Document $invoice): ?string
+    {
+        if ($invoice->payment_method !== PaymentMethod::BankTransfer || $invoice->bank_account_snapshot === null) {
+            return null;
+        }
+
+        try {
+            return app(QrPaymentService::class)->forDocument($invoice);
+        } catch (InvalidPaymentDataException) {
+            return null;
+        }
+    }
+
+    /**
+     * Související doklady: ten, na který faktura odkazuje, a doklady, které odkazují na ni.
+     *
+     * @return list<array{id: int, type: string, number: string|null, status: string, url: string|null}>
+     */
+    private function related(Document $invoice): array
+    {
+        $documents = Document::query()->where('related_document_id', $invoice->id)->get();
+        if ($invoice->relatedDocument !== null) {
+            $documents->prepend($invoice->relatedDocument);
+        }
+
+        return $documents->map(fn (Document $document): array => [
+            'id' => $document->id,
+            'type' => $document->type->value,
+            'number' => $document->number,
+            'status' => $document->status->value,
+            'url' => $document->type === DocumentType::Invoice ? route('invoices.show', $document) : null,
+        ])->values()->all();
     }
 
     private static function trimQty(string $qty): string

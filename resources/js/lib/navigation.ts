@@ -20,6 +20,8 @@ export type NavItem = {
     icon: LucideIcon;
     /** Cesta existující obrazovky; bez ní je položka zatím jen zástupná. */
     href?: string;
+    /** Štítek s počtem vedle položky (hodnotu posílá server ve sdílených props). */
+    badge?: 'overdue';
 };
 
 export type NavSection = {
@@ -30,7 +32,7 @@ export type NavSection = {
 export const home: NavItem = { label: 'Přehled', icon: House, href: '/' };
 
 export const sales: NavItem[] = [
-    { label: 'Faktury vydané', icon: FileText },
+    { label: 'Faktury vydané', icon: FileText, href: '/faktury', badge: 'overdue' },
     { label: 'Cenové nabídky', icon: ClipboardCheck },
     { label: 'Zálohové faktury', icon: Receipt },
     { label: 'Dobropisy', icon: CornerUpLeft },

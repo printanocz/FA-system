@@ -1,3 +1,5 @@
+import { plural } from '@/lib/format';
+
 export type DocumentBadge = { label: string; className: string };
 
 const badge = (label: string, tone = ''): DocumentBadge => ({
@@ -6,8 +8,19 @@ const badge = (label: string, tone = ''): DocumentBadge => ({
 });
 
 /** Štítek stavu dokladu. „Po splatnosti“ a „expirovaná“ jsou počítané stavy a mají přednost. */
-export function documentBadge(status: string, computed: string | null): DocumentBadge {
-    if (computed === 'overdue') return badge('Po splatnosti', 'red');
+export function documentBadge(
+    status: string,
+    computed: string | null,
+    overdueDays?: number | null,
+): DocumentBadge {
+    if (computed === 'overdue') {
+        return badge(
+            overdueDays && overdueDays > 0
+                ? `Po splatnosti ${overdueDays} ${plural(overdueDays, 'den', 'dny', 'dní')}`
+                : 'Po splatnosti',
+            'red',
+        );
+    }
     if (computed === 'expired') return badge('Expirovaná', 'orange');
 
     switch (status) {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Domain\Invoices\InvoiceListQuery;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -48,6 +49,8 @@ class HandleInertiaRequests extends Middleware
             'status' => fn () => $request->session()->get('status'),
             // Chyba akce, která neskončila validací: { message, href?, label? }.
             'error' => fn () => $request->session()->get('error'),
+            // Počet faktur po splatnosti do štítku v menu: jeden COUNT, jen pro přihlášené.
+            'overdueInvoices' => fn () => $user instanceof User ? InvoiceListQuery::overdueCount() : 0,
         ];
     }
 }
