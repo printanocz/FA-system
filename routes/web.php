@@ -4,6 +4,8 @@ use App\Http\Controllers\Contacts\ContactAresController;
 use App\Http\Controllers\Contacts\ContactController;
 use App\Http\Controllers\Contacts\ContactLookupController;
 use App\Http\Controllers\Invoices\InvoiceController;
+use App\Http\Controllers\Invoices\InvoiceListController;
+use App\Http\Controllers\Invoices\InvoicePaymentController;
 use App\Http\Controllers\Invoices\InvoiceTotalsController;
 use App\Http\Controllers\PriceItems\PriceItemController;
 use App\Http\Controllers\Settings\AresController;
@@ -34,15 +36,21 @@ Route::middleware(['auth', 'two-factor.required'])->group(function () {
     Route::get('/', fn () => Inertia::render('Dashboard'))->name('dashboard');
 
     Route::prefix('faktury')->name('invoices.')->group(function () {
+        Route::get('/', [InvoiceListController::class, 'index'])->name('index');
         Route::get('nova', [InvoiceController::class, 'create'])->name('create');
         Route::post('/', [InvoiceController::class, 'store'])->name('store');
         Route::post('vystavit', [InvoiceController::class, 'issueNew'])->name('issue-new');
         Route::post('prepocet', InvoiceTotalsController::class)->name('totals');
-        Route::get('{document}', [InvoiceController::class, 'show'])->name('show')->whereNumber('document');
-        Route::get('{document}/upravit', [InvoiceController::class, 'edit'])->name('edit')->whereNumber('document');
-        Route::put('{document}', [InvoiceController::class, 'update'])->name('update')->whereNumber('document');
-        Route::post('{document}/vystavit', [InvoiceController::class, 'issue'])->name('issue')->whereNumber('document');
-        Route::delete('{document}', [InvoiceController::class, 'destroy'])->name('destroy')->whereNumber('document');
+        Route::post('hromadne-uhrazeni', [InvoiceListController::class, 'pay'])->name('pay-many');
+        Route::get('{invoice}', [InvoiceController::class, 'show'])->name('show')->whereNumber('invoice');
+        Route::get('{invoice}/upravit', [InvoiceController::class, 'edit'])->name('edit')->whereNumber('invoice');
+        Route::put('{invoice}', [InvoiceController::class, 'update'])->name('update')->whereNumber('invoice');
+        Route::post('{invoice}/vystavit', [InvoiceController::class, 'issue'])->name('issue')->whereNumber('invoice');
+        Route::delete('{invoice}', [InvoiceController::class, 'destroy'])->name('destroy')->whereNumber('invoice');
+        Route::post('{invoice}/kopie', [InvoiceController::class, 'copy'])->name('copy')->whereNumber('invoice');
+        Route::post('{invoice}/uhrady', [InvoicePaymentController::class, 'store'])->name('payments.store')->whereNumber('invoice');
+        Route::delete('{invoice}/uhrady/{payment}', [InvoicePaymentController::class, 'destroy'])->name('payments.destroy')
+            ->whereNumber(['invoice', 'payment'])->scopeBindings();
     });
 
     Route::prefix('adresar')->name('contacts.')->group(function () {

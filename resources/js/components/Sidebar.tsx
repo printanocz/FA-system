@@ -26,10 +26,20 @@ function NavLink({
     onNavigate?: () => void;
 }) {
     const Icon = item.icon;
+    const { overdueInvoices } = usePage<SharedProps>().props;
+    const count = item.badge === 'overdue' ? (overdueInvoices ?? 0) : 0;
     const content = (
         <>
             <Icon strokeWidth={1.75} aria-hidden="true" />
             {item.label}
+            {count > 0 && (
+                <span
+                    className="af-sidebar__count af-sidebar__count--alert"
+                    aria-label={`po splatnosti: ${count}`}
+                >
+                    {count}
+                </span>
+            )}
         </>
     );
 

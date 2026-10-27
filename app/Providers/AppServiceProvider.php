@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Domain\Documents\DocumentType;
+use App\Models\Document;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +22,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Adresy /faktury/{invoice} ukážou jen faktury; nabídka, záloha nebo dobropis dá 404.
+        Route::bind('invoice', fn (string $value): Document => Document::query()
+            ->where('type', DocumentType::Invoice)
+            ->findOrFail($value));
     }
 }

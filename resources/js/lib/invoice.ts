@@ -75,6 +75,7 @@ export type ServerForm = {
     issue_date: string;
     due_date: string;
     taxable_date: string | null;
+    show_taxable_date: boolean;
     order_number: string;
     payment_method: 'bank_transfer' | 'cash';
     bank_account_id: number | null;
@@ -190,7 +191,7 @@ export function serverToForm(form: ServerForm): InvoiceFormValues {
         contact_id: form.contact_id,
         issue_date: isoToCz(form.issue_date),
         due_date: isoToCz(form.due_date),
-        show_duzp: form.taxable_date !== null,
+        show_duzp: form.show_taxable_date,
         taxable_date: isoToCz(form.taxable_date ?? form.issue_date),
         order_number: form.order_number,
         payment_method: form.payment_method === 'cash' ? 'cash' : 'bank_transfer',

@@ -20,6 +20,13 @@ const tabs: Tab[] = [
     { label: 'Nabídky', icon: quotes.icon, href: quotes.href },
 ];
 
+/** Záložka je aktivní na své adrese i na podstránkách (`/faktury/12`); Přehled jen na `/`. */
+function isCurrent(href: string, path: string): boolean {
+    if (href === '/') return path === '/';
+
+    return path === href || path.startsWith(`${href}/`);
+}
+
 function TabLabel({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
     return (
         <>
@@ -56,7 +63,7 @@ export default function TabBar() {
                                 key={tab.label}
                                 href={tab.href}
                                 className="af-tabbar__item"
-                                aria-current={tab.href === path ? 'page' : undefined}
+                                aria-current={isCurrent(tab.href, path) ? 'page' : undefined}
                             >
                                 <TabLabel icon={tab.icon} label={tab.label} />
                             </Link>

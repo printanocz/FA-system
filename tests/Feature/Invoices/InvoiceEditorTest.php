@@ -467,7 +467,7 @@ describe('deleting a draft', function () {
         $this->post('/faktury', invoicePayload());
         $document = Document::firstOrFail();
 
-        $this->delete("/faktury/{$document->id}")->assertRedirect('/');
+        $this->delete("/faktury/{$document->id}")->assertRedirect('/faktury');
 
         expect(Document::count())->toBe(0)
             ->and(DocumentItem::count())->toBe(0);

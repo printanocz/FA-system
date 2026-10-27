@@ -31,6 +31,7 @@ use Illuminate\Support\Facades\DB;
  * @property string $paid_total
  * @property string $discount_percent
  * @property bool $round_total
+ * @property bool $show_taxable_date
  * @property Carbon|null $issue_date
  * @property Carbon|null $taxable_date
  * @property Carbon|null $due_date
@@ -55,7 +56,7 @@ class Document extends Model
     public const LOCKED_ATTRIBUTES = [
         'type', 'number', 'series_id', 'number_year', 'number_seq',
         'contact_id', 'buyer_snapshot', 'supplier_snapshot', 'bank_account_snapshot',
-        'issue_date', 'taxable_date', 'currency', 'exchange_rate', 'vs',
+        'issue_date', 'taxable_date', 'show_taxable_date', 'currency', 'exchange_rate', 'vs',
         'discount_percent', 'round_total', 'rounding', 'subtotal', 'vat_total', 'total',
         'locked_at',
     ];
@@ -76,6 +77,7 @@ class Document extends Model
             'bank_account_snapshot' => 'array',
             'issue_date' => 'date',
             'taxable_date' => 'date',
+            'show_taxable_date' => 'boolean',
             'due_date' => 'date',
             'valid_until' => 'date',
             'paid_at' => 'date',

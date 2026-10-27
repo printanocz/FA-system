@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Documents\DeletePayment;
 use App\Actions\Documents\RecordPayment;
 use App\Domain\Documents\DocumentStatus;
 use App\Domain\Documents\DocumentType;
@@ -110,4 +111,76 @@ it('accepts a payment of an odd amount of pennies', function () {
     pay($invoice, '149.99');
 
     expect($invoice->fresh()->status)->toBe(DocumentStatus::Paid);
+});
+
+describe('deleting a payment', function () {
+    it('recalculates a fully paid invoice back to partially paid', function () {
+        $first = pay($this->invoice, '400.00', '2026-03-12');
+        $last = pay($this->invoice, '600.00', '2026-03-20');
+
+        app(DeletePayment::class)($last);
+
+        $invoice = $this->invoice->fresh();
+
+        expect($invoice->status)->toBe(DocumentStatus::PartiallyPaid)
+            ->and($invoice->paid_total)->toBe('400.00')
+            ->and($invoice->paid_at)->toBeNull()
+            ->and($invoice->payments()->pluck('id')->all())->toBe([$first->id]);
+    });
+
+    it('returns an unsent invoice to issued after its only payment is deleted', function () {
+        $payment = pay($this->invoice, '1000.00', '2026-03-12');
+
+        app(DeletePayment::class)($payment);
+
+        $invoice = $this->invoice->fresh();
+
+        expect($invoice->status)->toBe(DocumentStatus::Issued)
+            ->and($invoice->paid_total)->toBe('0.00')
+            ->and($invoice->paid_at)->toBeNull();
+    });
+
+    it('returns a sent invoice to sent', function () {
+        $this->invoice->forceFill(['sent_at' => now(), 'status' => DocumentStatus::Sent])->save();
+        $payment = pay($this->invoice, '300.00', '2026-03-12');
+
+        app(DeletePayment::class)($payment);
+
+        expect($this->invoice->fresh()->status)->toBe(DocumentStatus::Sent);
+    });
+
+    it('allows paying again after a deletion', function () {
+        $payment = pay($this->invoice, '1000.00', '2026-03-12');
+        app(DeletePayment::class)($payment);
+
+        pay($this->invoice->fresh(), '1000.00', '2026-03-25');
+
+        expect($this->invoice->fresh()->status)->toBe(DocumentStatus::Paid)
+            ->and($this->invoice->fresh()->paid_at->toDateString())->toBe('2026-03-25');
+    });
+
+    it('orders payments by date and id, so the last one is the newest date', function () {
+        $newerDate = pay($this->invoice, '300.00', '2026-03-20');
+        $olderDate = pay($this->invoice, '200.00', '2026-03-12');
+
+        expect(fn () => app(DeletePayment::class)($olderDate))->toThrow(InvalidDocumentStateException::class);
+
+        app(DeletePayment::class)($newerDate);
+
+        expect($this->invoice->fresh()->paid_total)->toBe('200.00');
+    });
+
+    it('refuses to delete a payment that is not the last one', function () {
+        $first = pay($this->invoice, '400.00', '2026-03-12');
+        pay($this->invoice, '100.00', '2026-03-15');
+
+        app(DeletePayment::class)($first);
+    })->throws(InvalidDocumentStateException::class, 'Smazat jde jen poslední úhrada');
+
+    it('refuses to touch the payments of a cancelled invoice', function () {
+        $payment = pay($this->invoice, '400.00', '2026-03-12');
+        $this->invoice->forceFill(['status' => DocumentStatus::Cancelled])->save();
+
+        app(DeletePayment::class)($payment);
+    })->throws(InvalidDocumentStateException::class);
 });

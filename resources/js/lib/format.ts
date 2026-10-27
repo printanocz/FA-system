@@ -58,3 +58,45 @@ export function formatPrice(amount: string | number | null | undefined, currency
         maximumFractionDigits: 2,
     }).format(Number(amount ?? 0));
 }
+
+/** Částka rozdělená na číslo a značku měny („24 500“ + „Kč“) pro velké hodnoty s malou měnou. */
+export function moneyParts(
+    amount: string | number | null | undefined,
+    currency = 'CZK',
+): { number: string; symbol: string } {
+    const value = Number(amount ?? 0);
+    const whole = Math.abs(value - Math.round(value)) < 0.005;
+    const parts = new Intl.NumberFormat('cs-CZ', {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: whole ? 0 : 2,
+        maximumFractionDigits: whole ? 0 : 2,
+    }).formatToParts(value);
+
+    return {
+        number: parts
+            .filter((part) => part.type !== 'currency' && part.type !== 'literal')
+            .map((part) => part.value)
+            .join('')
+            .trim(),
+        symbol: parts.find((part) => part.type === 'currency')?.value ?? currency,
+    };
+}
+
+/** Okamžik z ISO řetězce česky v pražském čase: „12. 10. 2026 v 9:02“. */
+export function formatDateTime(iso: string): string {
+    const date = new Date(iso);
+    const day = new Intl.DateTimeFormat('cs-CZ', {
+        day: 'numeric',
+        month: 'numeric',
+        year: 'numeric',
+        timeZone: 'Europe/Prague',
+    }).format(date);
+    const time = new Intl.DateTimeFormat('cs-CZ', {
+        hour: 'numeric',
+        minute: '2-digit',
+        timeZone: 'Europe/Prague',
+    }).format(date);
+
+    return `${day} v ${time}`;
+}
