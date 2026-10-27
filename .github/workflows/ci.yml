@@ -51,7 +51,15 @@ jobs:
         run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
 
       - name: Pest
-        run: vendor/bin/pest
+        run: |
+          set +e
+          vendor/bin/pest --colors=never --no-progress > /tmp/pest.txt 2>&1
+          code=$?
+          if [ $code -ne 0 ]; then
+            msg=$(sed 's/\x1b\[[0-9;]*m//g' /tmp/pest.txt | grep -v '^\s*$' | grep -v '✓' | grep -v ' PASS ' | head -c 7000 | tr '\n' '~')
+            echo "::error title=PESTOUT::$msg"
+          fi
+          exit $code
 
       - uses: actions/setup-node@v4
         with:
