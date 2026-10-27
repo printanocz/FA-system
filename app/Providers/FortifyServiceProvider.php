@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Actions\Fortify\ResetUserPassword;
+use App\Actions\Fortify\UpdateUserPassword;
 use App\Http\Responses\GenericPasswordResetLinkFailedResponse;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -28,6 +29,7 @@ class FortifyServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
+        Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
 
         Fortify::loginView(fn () => Inertia::render('auth/Login'));
         Fortify::requestPasswordResetLinkView(fn () => Inertia::render('auth/ForgotPassword'));

@@ -8,7 +8,8 @@
         <script>
             try {
                 var theme = localStorage.getItem('af-theme');
-                document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light';
+                var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.dataset.theme = dark ? 'dark' : 'light';
             } catch (e) {}
         </script>
         @vite(['resources/css/app.css', 'resources/js/app.tsx'])

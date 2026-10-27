@@ -82,3 +82,65 @@
     --font-ui: var(--font-ui);
     --font-mono: var(--font-mono);
 }
+
+/*
+ * Řádky formuláře Nastavení (artboard „Nastavení — firma a doklady“): popisek vlevo,
+ * pole vpravo; pod 760 px se řádek skládá pod sebe. Navigace sekcí je sticky sloupec odkazů.
+ */
+@layer components {
+    .set-row {
+        display: grid;
+        grid-template-columns: 200px minmax(0, 1fr);
+        gap: 16px;
+        align-items: center;
+        padding: 10px 16px;
+        position: relative;
+    }
+    .set-row + .set-row::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 16px;
+        right: 0;
+        height: 1px;
+        background: var(--separator);
+    }
+    .set-row .af-input {
+        height: 36px;
+    }
+    .set-row textarea.af-input {
+        height: auto;
+    }
+    .set-label {
+        font-size: 14px;
+        color: var(--label);
+    }
+    .set-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .set-nav a {
+        display: flex;
+        align-items: center;
+        height: 34px;
+        padding: 0 12px;
+        border-radius: 10px;
+        font-size: 14px;
+        color: var(--label);
+        text-decoration: none;
+    }
+    .set-nav a[aria-current='true'] {
+        background: var(--fill-strong);
+        font-weight: 600;
+    }
+    .set-nav a:hover {
+        background: var(--fill);
+    }
+    @media (max-width: 759px) {
+        .set-row {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 6px;
+        }
+    }
+}

@@ -46,7 +46,7 @@ export const records: NavItem[] = [
     { label: 'Reporty', icon: ChartColumn },
 ];
 
-export const settings: NavItem = { label: 'Nastavení', icon: Settings };
+export const settings: NavItem = { label: 'Nastavení', icon: Settings, href: '/nastaveni' };
 
 /** Menu pro Sidebar (desktop a sheet na tabletu). */
 export const sidebarSections: NavSection[] = [

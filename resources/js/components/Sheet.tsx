@@ -11,7 +11,7 @@ type SheetProps = {
 };
 
 const panelClasses = {
-    bottom: 'absolute inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+--spacing(2))] flex max-h-[calc(100dvh-(--spacing(16)))] flex-col transition-transform duration-300 ease-out motion-reduce:transition-none starting:translate-y-full',
+    bottom: 'absolute inset-x-2 mx-auto w-auto max-w-[560px] bottom-[calc(env(safe-area-inset-bottom)+--spacing(2))] flex max-h-[calc(100dvh-(--spacing(16)))] flex-col transition-transform duration-300 ease-out motion-reduce:transition-none starting:translate-y-full',
     left: 'absolute inset-y-3 left-3 w-62 transition-transform duration-300 ease-out motion-reduce:transition-none starting:-translate-x-full',
 } as const;
 

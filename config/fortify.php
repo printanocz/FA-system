@@ -83,6 +83,7 @@ return [
 
     'features' => [
         Features::resetPasswords(),
+        Features::updatePasswords(),
         Features::twoFactorAuthentication([
             'confirm' => true,
             'confirmPassword' => true,
