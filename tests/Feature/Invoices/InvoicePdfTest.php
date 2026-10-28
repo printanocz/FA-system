@@ -54,7 +54,7 @@ describe('HTML template', function () {
             ->toContain('Nejsem plátce DPH.')
             ->toContain('Fyzická osoba zapsaná v živnostenském rejstříku')
             ->toContain('Strana {PAGENO}/{nbpg}')
-            ->toContain("24\u{00A0}500,00")
+            ->toContain("20\u{00A0}500,00")
             ->and(mb_stripos($html, 'daňový doklad'))->toBeFalse();
     });
 

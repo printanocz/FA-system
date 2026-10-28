@@ -51,11 +51,7 @@ jobs:
         run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
 
       - name: Pest
-        run: |
-          set +e
-          out=$(vendor/bin/pest --colors=never 2>&1); code=$?
-          echo "::error title=PESTOUT::$(echo "$out" | sed 's/\x1b\[[0-9;]*m//g' | grep -v '✓' | head -c 7000 | tr '\n' '~')"
-          exit $code
+        run: vendor/bin/pest
 
       - name: Sample PDF
         # Ukázková faktura z pevných dat, ke kontrole vzhledu (artifact invoice-sample-pdf).
