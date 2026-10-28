@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ChevronRight, Download, Ellipsis, Plus, Send, Trash2 } from 'lucide-react';
+import { ChevronRight, Download, Ellipsis, FileText, Plus, Send, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import ConfirmSheet from '@/components/ConfirmSheet';
 import InvoicePreview from '@/components/invoices/InvoicePreview';
@@ -12,7 +12,12 @@ import { MOBILE_QUERY } from '@/lib/breakpoints';
 import { documentBadge, documentTypeLabel } from '@/lib/documents';
 import { formatDate, formatDateTime, formatMoney, moneyParts, plural } from '@/lib/format';
 import { diffDays } from '@/lib/invoice';
-import { paymentMethodLabel, type InvoiceDetail, type InvoiceShowProps } from '@/lib/invoices';
+import {
+    paymentMethodLabel,
+    pdfUrl,
+    type InvoiceDetail,
+    type InvoiceShowProps,
+} from '@/lib/invoices';
 
 const todayIso = () => {
     const now = new Date();
@@ -57,6 +62,9 @@ function DueLine({ invoice }: { invoice: InvoiceDetail }) {
     );
 }
 
+/** Po akci se obnoví i počet po splatnosti v Sidebaru a hlášky (sdílené props). */
+const AFTER_ACTION = ['invoice', 'contact', 'related', 'overdueInvoices', 'status', 'error'];
+
 export default function InvoiceShow({ invoice, contact, related }: InvoiceShowProps) {
     const isMobile = useMediaQuery(MOBILE_QUERY);
     const flash = useFlash();
@@ -78,6 +86,7 @@ export default function InvoiceShow({ invoice, contact, related }: InvoiceShowPr
             {},
             {
                 preserveScroll: true,
+                only: AFTER_ACTION,
                 onSuccess: (page) => flash.handle(page),
                 onFinish: () => setBusy(false),
             },
@@ -116,15 +125,15 @@ export default function InvoiceShow({ invoice, contact, related }: InvoiceShowPr
                 meta={<span className={badge.className}>{badge.label}</span>}
             >
                 <div className="af-toolbar__group af-glass">
-                    <button
-                        type="button"
+                    <a
+                        href={pdfUrl(invoice.id, true)}
+                        download
                         className="af-btn af-btn--icon"
                         aria-label="Stáhnout PDF"
-                        title="Přijde s PDF"
-                        disabled
+                        title="Stáhnout PDF"
                     >
                         <Download strokeWidth={1.75} aria-hidden="true" />
-                    </button>
+                    </a>
                     <button
                         type="button"
                         className="af-btn af-btn--icon"
@@ -201,6 +210,15 @@ export default function InvoiceShow({ invoice, contact, related }: InvoiceShowPr
             <div className="flex flex-wrap items-start gap-6">
                 <div className="max-tablet:order-last w-full max-w-[572px] min-w-0 flex-[0_1_572px]">
                     <InvoicePreview invoice={invoice} />
+                    <a
+                        href={pdfUrl(invoice.id)}
+                        target="_blank"
+                        rel="noopener"
+                        className="af-btn mt-3"
+                    >
+                        <FileText strokeWidth={1.75} aria-hidden="true" />
+                        Otevřít PDF
+                    </a>
                 </div>
 
                 <aside

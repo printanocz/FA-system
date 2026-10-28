@@ -187,3 +187,17 @@ export type InvoiceShowProps = {
 };
 
 export type { FlashError };
+
+/** Adresa PDF faktury; `stahnout` vrátí soubor jako přílohu místo zobrazení v okně. */
+export const pdfUrl = (id: number, download = false): string =>
+    `/faktury/${id}/pdf${download ? '?stahnout=1' : ''}`;
+
+/** Stáhne soubor bez opuštění stránky (odkaz s atributem download). */
+export function downloadFile(url: string): void {
+    const link = window.document.createElement('a');
+    link.href = url;
+    link.download = '';
+    window.document.body.appendChild(link);
+    link.click();
+    link.remove();
+}
