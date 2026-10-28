@@ -190,7 +190,7 @@ describe('route', function () {
         $response->assertOk()->assertHeader('Content-Type', 'application/pdf');
         expect($response->headers->get('Content-Disposition'))
             ->toStartWith('inline')
-            ->toContain("Faktura-{$invoice->number}.pdf")
+            ->toContain("filename=Faktura-{$invoice->number}.pdf")
             ->and($response->getContent())->toStartWith('%PDF');
     });
 
@@ -201,7 +201,7 @@ describe('route', function () {
 
         expect($response->headers->get('Content-Disposition'))
             ->toStartWith('attachment')
-            ->toContain("Faktura-{$invoice->number}.pdf");
+            ->toContain("filename=Faktura-{$invoice->number}.pdf");
     });
 
     it('creates the archive again when its file has gone missing', function () {

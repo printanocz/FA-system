@@ -21,7 +21,7 @@ class InvoicePdfController extends Controller
 
         return response($pdf->contents($invoice), 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => HeaderUtils::makeDisposition($disposition, $pdf->filename($invoice), 'Faktura.pdf'),
+            'Content-Disposition' => HeaderUtils::makeDisposition($disposition, $pdf->filename($invoice)),
             'Cache-Control' => 'private, no-store',
             'X-Content-Type-Options' => 'nosniff',
         ]);
