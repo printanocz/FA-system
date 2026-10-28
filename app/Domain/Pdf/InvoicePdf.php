@@ -126,7 +126,7 @@ class InvoicePdf
 
     public function archivePath(Document $document): string
     {
-        $year = $document->issue_date?->year ?? now()->year;
+        $year = $document->issue_date->year ?? now()->year;
 
         return 'documents/'.$year.'/'.$this->safe((string) $document->number).'.pdf';
     }
@@ -166,7 +166,7 @@ class InvoicePdf
             'tempDir' => $tempDir,
         ]);
 
-        $supplier = $document->supplier_snapshot['name'] ?? CompanyProfile::current()?->name ?? 'Splatno';
+        $supplier = $document->supplier_snapshot['name'] ?? CompanyProfile::current()->name ?? 'Splatno';
         $mpdf->SetTitle('Faktura '.($document->number ?? 'koncept'));
         $mpdf->SetAuthor((string) $supplier);
         $mpdf->SetCreator('Splatno');
@@ -284,7 +284,7 @@ class InvoicePdf
         if ($document->vs) {
             $cells[] = ['Variabilní symbol', $document->vs, false, true];
         }
-        $cells[] = ['Způsob úhrady', self::PAYMENT_LABELS[$method->value] ?? $method->value, false, false];
+        $cells[] = ['Způsob úhrady', self::PAYMENT_LABELS[$method->value], false, false];
         if ($document->order_number) {
             $cells[] = ['Objednávka č.', $document->order_number, false, false];
         }
