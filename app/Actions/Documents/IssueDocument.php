@@ -3,9 +3,11 @@
 namespace App\Actions\Documents;
 
 use App\Domain\Documents\DocumentStatus;
+use App\Domain\Documents\DocumentType;
 use App\Domain\Documents\Exceptions\InvalidDocumentStateException;
 use App\Domain\Documents\NumberSeriesService;
 use App\Domain\Documents\PaymentMethod;
+use App\Domain\Pdf\InvoicePdf;
 use App\Domain\Settings\DocumentSettings;
 use App\Models\BankAccount;
 use App\Models\CompanyProfile;
@@ -14,10 +16,13 @@ use App\Models\NumberSeries;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Vystavení dokladu: přidělí číslo, VS (číslo bez písmen), uloží snapshot dodavatele,
- * odběratele a účtu, přepočítá částky a doklad zamkne (locked_at).
+ * odběratele a účtu, přepočítá částky a doklad zamkne (locked_at). U faktury po commitu
+ * uloží archivní PDF.
  */
 final class IssueDocument
 {
@@ -25,6 +30,7 @@ final class IssueDocument
         private readonly NumberSeriesService $numbers,
         private readonly RecalculateDocument $recalculate,
         private readonly DocumentSettings $settings,
+        private readonly InvoicePdf $pdf,
     ) {}
 
     public function __invoke(Document $document, ?CarbonInterface $issueDate = null): Document
@@ -100,8 +106,28 @@ final class IssueDocument
             $document->locked_at = Carbon::now();
             $document->save();
 
+            // Archivní PDF až po commitu; jeho selhání vystavení neruší.
+            if ($document->type === DocumentType::Invoice) {
+                DB::afterCommit(fn () => $this->archive((int) $document->getKey()));
+            }
+
             return $document;
         });
+    }
+
+    /**
+     * Uloží archivní PDF. Chyba se jen zaloguje, PDF se pak vytvoří při prvním stažení.
+     */
+    private function archive(int $id): void
+    {
+        try {
+            $document = Document::query()->find($id);
+            if ($document !== null) {
+                $this->pdf->archive($document);
+            }
+        } catch (Throwable $e) {
+            Log::error('Archivní PDF faktury #'.$id.' se nepodařilo vytvořit, vytvoří se při prvním stažení.', ['exception' => $e]);
+        }
     }
 
     /**

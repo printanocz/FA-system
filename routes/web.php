@@ -6,6 +6,7 @@ use App\Http\Controllers\Contacts\ContactLookupController;
 use App\Http\Controllers\Invoices\InvoiceController;
 use App\Http\Controllers\Invoices\InvoiceListController;
 use App\Http\Controllers\Invoices\InvoicePaymentController;
+use App\Http\Controllers\Invoices\InvoicePdfController;
 use App\Http\Controllers\Invoices\InvoiceTotalsController;
 use App\Http\Controllers\PriceItems\PriceItemController;
 use App\Http\Controllers\Settings\AresController;
@@ -47,6 +48,7 @@ Route::middleware(['auth', 'two-factor.required'])->group(function () {
         Route::put('{invoice}', [InvoiceController::class, 'update'])->name('update')->whereNumber('invoice');
         Route::post('{invoice}/vystavit', [InvoiceController::class, 'issue'])->name('issue')->whereNumber('invoice');
         Route::delete('{invoice}', [InvoiceController::class, 'destroy'])->name('destroy')->whereNumber('invoice');
+        Route::get('{invoice}/pdf', [InvoicePdfController::class, 'show'])->name('pdf')->whereNumber('invoice');
         Route::post('{invoice}/kopie', [InvoiceController::class, 'copy'])->name('copy')->whereNumber('invoice');
         Route::post('{invoice}/uhrady', [InvoicePaymentController::class, 'store'])->name('payments.store')->whereNumber('invoice');
         Route::delete('{invoice}/uhrady/{payment}', [InvoicePaymentController::class, 'destroy'])->name('payments.destroy')

@@ -13,6 +13,7 @@ import { useInvoiceTotals } from '@/hooks/useInvoiceTotals';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { MOBILE_QUERY } from '@/lib/breakpoints';
+import { pdfUrl } from '@/lib/invoices';
 import {
     addDaysIso,
     czToIso,
@@ -121,6 +122,40 @@ function EditorForm({
         }
     };
 
+    /**
+     * Náhled PDF v novém okně. Uložený koncept bez změn se otevře hned, jinak se nejdřív uloží.
+     * Okno se otevře ještě v kliknutí (jinak ho prohlížeč zablokuje) a po uložení se přesměruje.
+     */
+    const previewPdf = () => {
+        if (f.processing) return;
+        const win = window.open('', '_blank');
+        const open = (id: number) => {
+            if (win) win.location.href = pdfUrl(id);
+            else window.open(pdfUrl(id), '_blank');
+        };
+
+        if (document && !f.isDirty) {
+            open(document.id);
+            return;
+        }
+
+        f.transform(prepare);
+        const options = {
+            preserveScroll: true,
+            onSuccess: (page: { props: Record<string, unknown> }) => {
+                f.setDefaults();
+                const saved = page.props.document as { id: number } | null | undefined;
+                const id = document?.id ?? saved?.id;
+                if (id) open(id);
+                else win?.close();
+            },
+            onError: () => win?.close(),
+        };
+
+        if (document) f.put(`/faktury/${document.id}`, { ...options, preserveState: true });
+        else f.post('/faktury', options);
+    };
+
     // ⌘/Ctrl+S uloží koncept, ⌘/Ctrl+Enter vystaví. Handler vždy vidí poslední stav formuláře.
     const latest = useRef(submit);
     useEffect(() => {
@@ -207,7 +242,12 @@ function EditorForm({
                 >
                     Uložit koncept
                 </button>
-                <button type="button" className="af-btn" disabled title="Přijde s PDF">
+                <button
+                    type="button"
+                    className="af-btn"
+                    disabled={f.processing}
+                    onClick={previewPdf}
+                >
                     Náhled PDF
                 </button>
                 <button
