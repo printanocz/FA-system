@@ -81,11 +81,6 @@ jobs:
           php artisan app:sample-pdf sample-pdf/faktura-dm-sans.pdf
           rm -f resources/fonts/*.ttf
 
-      - name: Sample PDF jako PNG
-        continue-on-error: true
-        run: |
-          for f in sample-pdf/*.pdf; do pdftoppm -r 80 -png "$f" "${f%.pdf}"; done
-
       - uses: actions/upload-artifact@v4
         with:
           name: invoice-sample-pdf
