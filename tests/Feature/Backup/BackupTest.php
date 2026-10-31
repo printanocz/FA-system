@@ -193,7 +193,7 @@ describe('data export', function () {
             ->and((string) $zip->getFromName("faktury-pdf/Faktura-{$invoice->number}.pdf"))->toStartWith('%PDF')
             ->and((string) $zip->getFromName('faktury.csv'))->toContain($invoice->number)->toContain('Pekárna Hrubý')
             ->and((string) $zip->getFromName('polozky.csv'))->toContain('14500.00')
-            ->and((string) $zip->getFromName('cenik.csv'))->toContain('Návrh loga;LOGO');
+            ->and((string) $zip->getFromName('cenik.csv'))->toContain('"Návrh loga";LOGO');
         expect(Document::query()->count())->toBe(2);
     });
 
