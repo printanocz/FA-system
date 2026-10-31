@@ -4,6 +4,7 @@ namespace App\Domain\Pdf;
 
 use App\Domain\Documents\PaymentMethod;
 use App\Domain\Payments\Exceptions\InvalidPaymentDataException;
+use App\Domain\Payments\IbanConverter;
 use App\Domain\Payments\QrPaymentService;
 use App\Models\BankAccount;
 use App\Models\CompanyProfile;
@@ -49,6 +50,7 @@ class InvoicePdf
     public function __construct(
         private readonly QrPaymentService $qr,
         private readonly PdfFonts $fonts,
+        private readonly IbanConverter $ibans = new IbanConverter,
     ) {}
 
     /** HTML dokladu (bez mPDF); stejný výstup, ze kterého se pak dělá PDF. */
@@ -102,7 +104,7 @@ class InvoicePdf
 
     /**
      * Uloží archivní PDF vystaveného dokladu do storage/app/private/documents/{rok}/{číslo}.pdf
-     * a zapíše `pdf_path`. Existující soubor se nikdy nepřepíše. Vrací cestu na disku `local`.
+     * a zapíše `pdf_path` a `pdf_sha256`. Existující soubor se nikdy nepřepíše. Vrací cestu na disku `local`.
      */
     public function archive(Document $document): string
     {
@@ -117,8 +119,11 @@ class InvoicePdf
             $disk->put($path, $this->render($document));
         }
 
-        if ($document->pdf_path !== $path) {
-            $document->forceFill(['pdf_path' => $path])->saveQuietly();
+        // Otisk souboru pro kontrolu integrity; u staršího archivu bez otisku se doplní ze souboru.
+        $hash = $document->pdf_sha256;
+        if ($hash === null || $document->pdf_path !== $path) {
+            $hash = hash('sha256', (string) $disk->get($path));
+            $document->forceFill(['pdf_path' => $path, 'pdf_sha256' => $hash])->saveQuietly();
         }
 
         return $path;
@@ -229,7 +234,7 @@ class InvoicePdf
             'textAfter' => $document->text_after,
             'bank' => $showBank ? [
                 'account' => ($bank['account_number'] ?? '').'/'.($bank['bank_code'] ?? ''),
-                'iban' => $bank['iban'] ?? null,
+                'iban' => ! empty($bank['iban']) ? $this->ibans->pretty((string) $bank['iban']) : null,
                 'swift' => $bank['swift'] ?? null,
                 'vs' => $document->vs,
                 'ks' => $document->ks,

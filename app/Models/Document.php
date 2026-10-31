@@ -39,6 +39,8 @@ use Illuminate\Support\Facades\DB;
  * @property Carbon|null $paid_at
  * @property Carbon|null $sent_at
  * @property Carbon|null $locked_at
+ * @property string|null $pdf_path
+ * @property string|null $pdf_sha256
  * @property array<string, mixed>|null $buyer_snapshot
  * @property array<string, mixed>|null $supplier_snapshot
  * @property array<string, mixed>|null $bank_account_snapshot

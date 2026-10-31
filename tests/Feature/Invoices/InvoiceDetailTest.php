@@ -100,6 +100,8 @@ describe('detail', function () {
             ->where('invoice.can_pay', true)
             ->where('invoice.can_delete', true)
             ->where('invoice.qr_svg', fn ($svg) => str_contains((string) $svg, '<svg'))
+            ->where('invoice.bank_account.iban', 'CZ65 0800 0000 1920 0014 5399')
+            ->where('invoice.pdf_sha256', fn ($hash) => is_string($hash) && preg_match('/^[0-9a-f]{64}$/', $hash) === 1)
             ->where('contact.id', $contact->id)
             ->where('contact.stats.invoice_count', 1)
             ->where('contact.stats.turnover', '24500.00')

@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Domain\Documents\DocumentStatus;
 use App\Domain\Documents\DocumentType;
 use App\Domain\Documents\PaymentMethod;
+use App\Domain\Payments\IbanConverter;
 use App\Domain\Pdf\InvoicePdf;
 use App\Models\Document;
 use App\Models\DocumentItem;
@@ -109,7 +110,7 @@ class SamplePdf extends Command
                 'name' => 'Česká spořitelna',
                 'account_number' => '2401234567',
                 'bank_code' => '0800',
-                'iban' => 'CZ6508000000192000145399',
+                'iban' => (new IbanConverter)->fromCzechAccount('2401234567', '0800'),
                 'swift' => 'GIBACZPX',
                 'currency' => 'CZK',
             ],

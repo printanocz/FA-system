@@ -2,6 +2,7 @@
 
 use App\Domain\Documents\DocumentType;
 use App\Domain\Documents\PaymentMethod;
+use App\Domain\Payments\IbanConverter;
 use App\Domain\Pdf\InvoicePdf;
 use App\Domain\Pdf\PdfFonts;
 use App\Models\BankAccount;
@@ -20,7 +21,7 @@ function pdfPages(string $pdf): int
     return preg_match_all('#/Type\s*/Page(?![a-z])#', $pdf);
 }
 
-/** Vystavená faktura s platným účtem (IBAN z továrny není platný, QR by nešel sestavit). */
+/** Vystavená faktura s pevným IBAN (QR se sestaví z platného IBAN). */
 function pdfInvoice(array $items = [[1, 14500], [10, 600]], array $attributes = []): Document
 {
     BankAccount::default() ?? BankAccount::factory()->default()->create(['iban' => 'CZ6508000000192000145399']);
@@ -50,7 +51,8 @@ describe('HTML template', function () {
             ->toContain('Pekárna Hrubý s.r.o.')
             ->toContain('08765432')
             ->toContain($invoice->vs)
-            ->toContain('CZ6508000000192000145399')
+            ->toContain('CZ65 0800 0000 1920 0014 5399')
+            ->not->toContain('CZ6508000000192000145399')
             ->toContain('Nejsem plátce DPH.')
             ->toContain('Fyzická osoba zapsaná v živnostenském rejstříku')
             ->toContain('Strana {PAGENO}/{nbpg}')
@@ -150,6 +152,22 @@ describe('archive', function () {
         $this->get("/faktury/{$invoice->id}/pdf")->assertOk();
 
         expect(Storage::disk('local')->get($path))->toBe('%PDF-original');
+    });
+
+    it('stores the SHA-256 of the archived file', function () {
+        $invoice = pdfInvoice()->fresh();
+
+        expect($invoice->pdf_sha256)->toBe(hash('sha256', Storage::disk('local')->get($invoice->pdf_path)));
+    });
+
+    it('backfills the hash of a legacy archive without one', function () {
+        $invoice = pdfInvoice();
+        $invoice->forceFill(['pdf_sha256' => null])->saveQuietly();
+
+        app(InvoicePdf::class)->archive($invoice->fresh());
+
+        $invoice = $invoice->fresh();
+        expect($invoice->pdf_sha256)->toBe(hash('sha256', Storage::disk('local')->get($invoice->pdf_path)));
     });
 
     it('does not archive a quote', function () {
@@ -273,6 +291,20 @@ describe('fonts', function () {
     });
 });
 
+describe('bundled fonts', function () {
+    it('ships DM Sans and DM Mono as TrueType files with the licence', function () {
+        $dir = resource_path('fonts');
+
+        foreach (['DMSans-Regular', 'DMSans-Bold', 'DMSans-Italic', 'DMSans-BoldItalic', 'DMMono-Regular'] as $name) {
+            expect(file_get_contents("{$dir}/{$name}.ttf", false, null, 0, 4))->toBe("\x00\x01\x00\x00");
+        }
+        expect(file_get_contents($dir.'/OFL.txt'))->toContain('SIL OPEN FONT LICENSE');
+
+        $families = (new PdfFonts)->resolve()['families'];
+        expect($families['body'])->toBe('dmsans')->and($families['mono'])->toBe('dmmono');
+    });
+});
+
 describe('app:sample-pdf', function () {
     it('writes a sample invoice', function () {
         $path = sys_get_temp_dir().'/splatno-sample-'.uniqid().'.pdf';
@@ -281,5 +313,17 @@ describe('app:sample-pdf', function () {
 
         expect(file_get_contents($path))->toStartWith('%PDF');
         unlink($path);
+    });
+
+    it('generates a valid IBAN in the bank account factory', function () {
+        $account = BankAccount::factory()->create();
+
+        expect((new IbanConverter)->isValid($account->iban))->toBeTrue();
+    });
+
+    it('uses a valid IBAN derived from the account number', function () {
+        $iban = (new IbanConverter)->fromCzechAccount('2401234567', '0800');
+
+        expect((new IbanConverter)->isValid($iban))->toBeTrue();
     });
 });
