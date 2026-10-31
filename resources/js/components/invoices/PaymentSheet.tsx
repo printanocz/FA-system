@@ -46,6 +46,7 @@ function PaymentForm({
         f.transform((data) => ({ ...data, paid_at: czToIso(data.paid_at) ?? data.paid_at }));
         f.post(`/faktury/${invoiceId}/uhrady`, {
             preserveScroll: true,
+            only: ['invoice', 'contact', 'related', 'overdueInvoices', 'status', 'error'],
             onSuccess: (page) => {
                 onDone(page);
                 onClose();

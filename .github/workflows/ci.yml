@@ -53,6 +53,40 @@ jobs:
       - name: Pest
         run: vendor/bin/pest
 
+      - name: Sample PDF
+        # Ukázková faktura z pevných dat, ke kontrole vzhledu (artifact invoice-sample-pdf).
+        env:
+          CACHE_STORE: array
+        run: |
+          mkdir -p sample-pdf
+          php artisan app:sample-pdf sample-pdf/faktura.pdf
+          php artisan app:sample-pdf sample-pdf/faktura-hotove.pdf --cash
+          php artisan app:sample-pdf sample-pdf/faktura-60-polozek.pdf --items=60
+
+      - name: Sample PDF s písmy DM Sans a DM Mono
+        # Náhled zamýšleného vzhledu, dokud nejsou v resources/fonts brandová písma.
+        # Jen pro artifact, do repozitáře se nic nepřidává; selhání nic neblokuje.
+        continue-on-error: true
+        env:
+          CACHE_STORE: array
+        run: |
+          npm install --no-save --no-audit --no-fund --prefix "$RUNNER_TEMP/fonts" @expo-google-fonts/dm-sans @expo-google-fonts/dm-mono
+          F="$RUNNER_TEMP/fonts/node_modules/@expo-google-fonts"
+          mkdir -p resources/fonts
+          cp "$F/dm-sans/400Regular/DMSans_400Regular.ttf" resources/fonts/DMSans-Regular.ttf
+          cp "$F/dm-sans/700Bold/DMSans_700Bold.ttf" resources/fonts/DMSans-Bold.ttf
+          cp "$F/dm-sans/400Regular_Italic/DMSans_400Regular_Italic.ttf" resources/fonts/DMSans-Italic.ttf
+          cp "$F/dm-sans/700Bold_Italic/DMSans_700Bold_Italic.ttf" resources/fonts/DMSans-BoldItalic.ttf
+          cp "$F/dm-mono/400Regular/DMMono_400Regular.ttf" resources/fonts/DMMono-Regular.ttf
+          php artisan app:sample-pdf sample-pdf/faktura-dm-sans.pdf
+          rm -f resources/fonts/*.ttf
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: invoice-sample-pdf
+          path: sample-pdf/
+          if-no-files-found: error
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22

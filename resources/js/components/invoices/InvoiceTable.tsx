@@ -3,7 +3,7 @@ import { Check, Ellipsis } from 'lucide-react';
 import Menu, { type MenuItem } from '@/components/Menu';
 import { documentBadge } from '@/lib/documents';
 import { formatDate, formatPrice } from '@/lib/format';
-import type { InvoiceRow } from '@/lib/invoices';
+import { downloadFile, pdfUrl, type InvoiceRow } from '@/lib/invoices';
 
 export const invoiceHref = (row: InvoiceRow) =>
     row.status === 'draft' ? `/faktury/${row.id}/upravit` : `/faktury/${row.id}`;
@@ -14,7 +14,7 @@ export type RowActions = {
     onCopy: (row: InvoiceRow) => void;
 };
 
-/** Položky menu ⋯ u řádku faktury; PDF a odeslání přijdou s T-10 a T-11. */
+/** Položky menu ⋯ u řádku faktury; odeslání přijde s T-11. */
 export function rowMenu(row: InvoiceRow, actions: RowActions): MenuItem[] {
     const items: MenuItem[] = [
         { label: 'Otevřít', onSelect: () => router.visit(invoiceHref(row)) },
@@ -30,7 +30,11 @@ export function rowMenu(row: InvoiceRow, actions: RowActions): MenuItem[] {
         items.push({ label: 'Označit jako uhrazené', onSelect: () => actions.onPay(row) });
     }
     items.push(
-        { label: 'Stáhnout PDF', disabled: true, hint: 'Přijde brzy', separatorBefore: true },
+        {
+            label: 'Stáhnout PDF',
+            onSelect: () => downloadFile(pdfUrl(row.id, true)),
+            separatorBefore: true,
+        },
         { label: 'Odeslat', disabled: true, hint: 'Přijde brzy' },
     );
     if (row.can_delete) {

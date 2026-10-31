@@ -23,6 +23,9 @@ import {
 const SEARCH_DELAY_MS = 250;
 const RELOAD = ['invoices', 'pagination', 'filters', 'counts', 'totals'];
 
+/** Po akci se obnoví i počet po splatnosti v Sidebaru a hlášky (sdílené props). */
+const AFTER_ACTION = [...RELOAD, 'overdueInvoices', 'status', 'error'];
+
 export default function InvoicesIndex({
     invoices,
     pagination,
@@ -75,6 +78,7 @@ export default function InvoicesIndex({
         setBusy(true);
         router[method](url, data as never, {
             preserveScroll: true,
+            only: AFTER_ACTION,
             onSuccess: (page) => {
                 flash.handle(page);
                 setSelected([]);

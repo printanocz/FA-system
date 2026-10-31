@@ -10,6 +10,7 @@ use App\Models\NumberSeries;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Fortify\Contracts\TwoFactorAuthenticationProvider;
 use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
@@ -27,7 +28,11 @@ use Tests\TestCase;
 pest()
     ->extend(TestCase::class)
     ->use(RefreshDatabase::class)
-    ->beforeEach(fn () => $this->withoutVite())
+    ->beforeEach(function () {
+        $this->withoutVite();
+        // Archivní PDF a další soubory se v testech nikdy nezapisují na skutečný disk.
+        Storage::fake('local');
+    })
     ->in('Feature');
 
 /**
