@@ -14,10 +14,13 @@ class DocumentItemFactory extends Factory
     /** @return array<string, mixed> */
     public function definition(): array
     {
+        static $sequence = 0;
+        $n = ++$sequence;
+
         return [
             'document_id' => Document::factory(),
             'position' => 1,
-            'name' => fake()->words(3, true),
+            'name' => "Položka {$n}",
             'qty' => '1.0000',
             'unit' => 'ks',
             'unit_price' => '100.00',

@@ -267,6 +267,10 @@ class InvoiceController extends Controller
             'to' => $contact->email ?? '',
             'cc' => array_values($contact->email_cc ?? []),
             'copy_to_me' => (bool) $templates['copy_to_me'],
+            // Poslední upomínka z posledních 7 dní: Sheet na ni upozorní (jen informace).
+            'last_reminder_at' => $invoice->last_reminder_at !== null && $invoice->last_reminder_at->gt(Carbon::now()->subDays(7))
+                ? $invoice->last_reminder_at->toDateString()
+                : null,
             'copy_address' => CompanyProfile::current()->email ?? '',
             'attachment' => $pdf->filename($invoice),
             'invoice' => [
