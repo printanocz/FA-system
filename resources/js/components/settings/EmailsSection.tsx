@@ -118,16 +118,13 @@ export default function EmailsSection({
 
             <div className="af-list-header">Proměnné</div>
             <div className="af-list">
-                <div className="set-row">
-                    <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[14px] leading-5">
-                        {Object.entries(variables).map(([name, description]) => (
-                            <div key={name} className="contents">
-                                <dt className="af-mono">{`{${name}}`}</dt>
-                                <dd className="text-label-2 m-0">{description}</dd>
-                            </div>
-                        ))}
-                    </dl>
-                </div>
+                {Object.entries(variables).map(([name, description]) => (
+                    <SettingsRow key={name} label={`{${name}}`}>
+                        <span className="text-label-2 py-1.5 text-[14px] leading-5">
+                            {description}
+                        </span>
+                    </SettingsRow>
+                ))}
             </div>
             <div className="af-list-footer">
                 Proměnné se dosadí při otevření okna Odeslat e-mailem a před odesláním jdou texty
