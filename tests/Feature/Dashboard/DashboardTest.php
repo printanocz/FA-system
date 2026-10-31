@@ -411,9 +411,11 @@ describe('recent documents', function () {
     });
 
     it('uses the name of the first item as the description', function () {
-        $invoice = dashInvoice('2026-10-01', '3000');
+        // Položky jdou přidat jen do nezamčeného dokladu, zamkne se až potom.
+        $invoice = dashInvoice('2026-10-01', '3000', ['locked_at' => null]);
         DocumentItem::factory()->create(['document_id' => $invoice->id, 'position' => 2, 'name' => 'Druhá položka']);
         DocumentItem::factory()->create(['document_id' => $invoice->id, 'position' => 1, 'name' => 'Návrh obalů, 3 varianty']);
+        DB::table('documents')->where('id', $invoice->id)->update(['locked_at' => now()]);
         dashInvoice('2026-09-01', '100');
 
         $recent = dashboard('2026-10-31')['recent'];
