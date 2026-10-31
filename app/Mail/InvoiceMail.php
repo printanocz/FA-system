@@ -15,8 +15,8 @@ use Illuminate\Mail\Mailables\Envelope;
 class InvoiceMail extends Mailable
 {
     /**
-     * @param  list<string>  $cc
-     * @param  list<string>  $bcc
+     * @param  list<string>  $ccAddresses
+     * @param  list<string>  $bccAddresses
      */
     public function __construct(
         public readonly string $mailSubject,
