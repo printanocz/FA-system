@@ -11,12 +11,15 @@
     "require": {
         "php": "^8.3",
         "brick/money": "^0.10",
+        "druidfi/mysqldump-php": "^1.0",
         "endroid/qr-code": "^6.0",
         "inertiajs/inertia-laravel": "^3.5",
         "laravel/fortify": "^1.25",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
-        "mpdf/mpdf": "^8.2"
+        "league/flysystem-aws-s3-v3": "^3.0",
+        "mpdf/mpdf": "^8.2",
+        "spatie/db-dumper": "^3.7|^4.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
