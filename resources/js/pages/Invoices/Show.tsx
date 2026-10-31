@@ -219,6 +219,14 @@ export default function InvoiceShow({ invoice, contact, related }: InvoiceShowPr
                         <FileText strokeWidth={1.75} aria-hidden="true" />
                         Otevřít PDF
                     </a>
+                    {invoice.pdf_sha256 && (
+                        <p className="text-label-2 mt-2 mb-0 text-[13px] leading-[18px]">
+                            Archivní PDF · SHA-256{' '}
+                            <span className="af-mono" title={invoice.pdf_sha256}>
+                                {invoice.pdf_sha256.slice(0, 12)}…
+                            </span>
+                        </p>
+                    )}
                 </div>
 
                 <aside

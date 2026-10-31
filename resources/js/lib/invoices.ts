@@ -161,6 +161,8 @@ export type InvoiceDetail = {
     buyer: Party | null;
     bank_account: BankSnapshot | null;
     qr_svg: string | null;
+    /** SHA-256 archivního PDF (hex), `null` dokud archiv nevznikl. */
+    pdf_sha256: string | null;
     can_pay: boolean;
     can_delete: boolean;
     items: InvoiceItemData[];

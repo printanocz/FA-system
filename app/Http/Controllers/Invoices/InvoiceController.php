@@ -12,6 +12,7 @@ use App\Domain\Documents\DocumentType;
 use App\Domain\Documents\Exceptions\DocumentException;
 use App\Domain\Documents\PaymentMethod;
 use App\Domain\Payments\Exceptions\InvalidPaymentDataException;
+use App\Domain\Payments\IbanConverter;
 use App\Domain\Payments\QrPaymentService;
 use App\Domain\Settings\DocumentSettings;
 use App\Http\Controllers\Controller;
@@ -200,7 +201,8 @@ class InvoiceController extends Controller
                 'text_after' => $invoice->text_after,
                 'supplier' => $invoice->supplier_snapshot,
                 'buyer' => $invoice->buyer_snapshot,
-                'bank_account' => $invoice->bank_account_snapshot,
+                'bank_account' => $this->bankForDisplay($invoice->bank_account_snapshot),
+                'pdf_sha256' => $invoice->pdf_sha256,
                 'qr_svg' => $this->qr($invoice),
                 'can_pay' => $canPay,
                 'can_delete' => $this->canDelete($invoice),
@@ -291,6 +293,21 @@ class InvoiceController extends Controller
         }
 
         return true;
+    }
+
+    /**
+     * Účet ze snapshotu pro zobrazení: IBAN po čtveřicích.
+     *
+     * @param  array<string, mixed>|null  $account
+     * @return array<string, mixed>|null
+     */
+    private function bankForDisplay(?array $account): ?array
+    {
+        if ($account !== null && ! empty($account['iban'])) {
+            $account['iban'] = (new IbanConverter)->pretty((string) $account['iban']);
+        }
+
+        return $account;
     }
 
     /** QR Platba pro náhled; faktura bez účtu nebo bez zbývající částky ji nemá. */
