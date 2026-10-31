@@ -30,9 +30,7 @@ final class RetentionPolicy
             return null;
         }
 
-        $at = CarbonImmutable::createFromFormat('Ymd-His', $m[1].'-'.$m[2]);
-
-        return $at === false ? null : $at;
+        return CarbonImmutable::createFromFormat('Ymd-His', $m[1].'-'.$m[2]);
     }
 
     /**

@@ -62,7 +62,7 @@ do souboru `splatno-RRRRMMDD-HHMMSS.zip.enc`. Soubor se uloží do `storage/app/
 4. **Databáze.** V phpMyAdminu vyberte databázi aplikace (při obnově na prázdný server ji nejdřív vytvořte, kódování
    `utf8mb4_unicode_ci`) → **Import** → `database.sql`. Pro velké soubory import rozdělte nebo použijte `mysql < database.sql`, má-li hosting SSH.
 5. **Soubory.** Obsah složky `storage/private/` nahrajte (FTP) do `storage/app/private/` aplikace (zachovejte podsložky `documents/RRRR/`).
-6. **Závěr.** `.env` obnovte z vlastní kopie (zálohy tajnosti `.env` neobsahují). Spusťte `php artisan migrate --force`
+6. **Závěr.** `.env` obnovte z vlastní kopie (záloha `.env` neobsahuje, držte si ho zvlášť). Spusťte `php artisan migrate --force`
    (doplní případné novější migrace), `php artisan optimize:clear`, přihlaste se a zkontrolujte poslední fakturu a její PDF.
 
 ## Export dat (bez šifrování)
