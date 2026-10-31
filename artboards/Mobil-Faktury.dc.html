@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Faktury na mobilu</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/affakturace/tokens.css">
+<link rel="stylesheet" href="ds/affakturace/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--accent-text)}a:hover{color:var(--label)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; position: relative; overflow: hidden; background: var(--bg); color: var(--label); font-family: var(--font-ui);">
+  <div style="padding: 62px 16px 140px; display: flex; flex-direction: column; gap: 14px; box-sizing: border-box;">
+
+    <header style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;">
+      <h1 style="margin: 0; font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: -0.4px;">Faktury</h1>
+      <button class="af-btn af-btn--glass af-btn--icon af-btn--lg" aria-label="Filtr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button>
+    </header>
+
+    <label class="af-search" style="height: 40px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg><input id="q-mobile" placeholder="Číslo, klient, částka"></label>
+
+    <div class="af-segmented" role="group" aria-label="Stav faktur">
+      <button aria-pressed="true">Vše <span class="af-count">63</span></button>
+      <button aria-pressed="false">Neuhrazené <span class="af-count">3</span></button>
+      <button aria-pressed="false">Po splatnosti <span class="af-count">1</span></button>
+      <button aria-pressed="false">Uhrazené <span class="af-count">59</span></button>
+    </div>
+
+    <section>
+      <div class="af-list-header" style="display: flex; justify-content: space-between;"><span>Nejnovější</span><span style="font-variant-numeric: tabular-nums;">6 z 63</span></div>
+      <div class="af-list">
+        <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+          <div class="af-list__row" style="align-items: flex-start; gap: 10px;">
+            <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
+              <div style="display: flex; justify-content: space-between; gap: 8px;">
+                <span style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{r.client}}</span>
+                <span style="font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap;">{{r.amount}}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <span style="font-size: 12px; line-height: 16px; color: var(--label-3);"><span class="af-mono" style="font-size: 12px;">{{r.no}}</span> · {{r.issued}}</span>
+                <span class="{{r.badge}}">{{r.state}}</span>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </div>
+
+  <nav class="af-tabbar" aria-label="Hlavní menu" style="position: absolute; left: 16px; right: 16px; bottom: 30px;">
+    <div class="af-tabbar__pill af-glass">
+      <a class="af-tabbar__item" href="Mobil-Prehled.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg>Přehled</a>
+      <a class="af-tabbar__item" href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>Faktury</a>
+      <a class="af-tabbar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M10 3h4v2h-4zM9.5 13l2 2 3.5-4"/></svg>Nabídky</a>
+      <a class="af-tabbar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>Další</a>
+    </div>
+    <button class="af-tabbar__fab" aria-label="Nová faktura"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Vzhled"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const rows = [
+      { client: 'Vinotéka Habánek', amount: '9 800 Kč', no: '2026064', issued: '25. 10.', badge: 'af-badge af-badge--outline', state: 'Koncept' },
+      { client: 'Kavárna U Mlýna', amount: '3 200 Kč', no: '2026063', issued: '20. 10.', badge: 'af-badge af-badge--orange', state: 'Částečně' },
+      { client: 'Pekárna Hrubý s.r.o.', amount: '24 500 Kč', no: '2026062', issued: '12. 10.', badge: 'af-badge af-badge--blue', state: 'Odesláno' },
+      { client: 'Studio Lipka s.r.o.', amount: '15 200 Kč', no: '2026061', issued: '8. 10.', badge: 'af-badge af-badge--green', state: 'Uhrazeno' },
+      { client: 'Penzion Pod Lesem', amount: '5 600 Kč', no: '2026060', issued: '2. 10.', badge: 'af-badge af-badge--green', state: 'Uhrazeno' },
+      { client: 'Autoservis Vávra', amount: '8 400 Kč', no: '2026059', issued: '30. 9.', badge: 'af-badge af-badge--red', state: 'Po splatnosti' }
+    ];
+    return { theme: this.props.theme ?? 'light', rows };
+  }
+}
+</script>
+</body>
+</html>

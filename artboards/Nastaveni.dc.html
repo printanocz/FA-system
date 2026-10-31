@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Nastavení</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/affakturace/tokens.css">
+<link rel="stylesheet" href="ds/affakturace/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--accent-text)}a:hover{color:var(--label)}
+.set-row{display:grid;grid-template-columns:200px minmax(0,1fr);gap:16px;align-items:center;padding:10px 16px;position:relative}
+.set-row+.set-row::before{content:"";position:absolute;top:0;left:16px;right:0;height:1px;background:var(--separator)}
+.set-row .af-input{height:36px}
+.set-label{font-size:14px;color:var(--label)}
+.set-nav{display:flex;flex-direction:column;gap:2px}
+.set-nav a{display:flex;align-items:center;height:34px;padding:0 12px;border-radius:10px;font-size:14px;color:var(--label);text-decoration:none}
+.set-nav a[aria-current="true"]{background:var(--fill-strong);font-weight:600}
+.set-nav a:hover{background:var(--fill)}
+@media (max-width: 760px){.set-row{grid-template-columns:minmax(0,1fr);gap:6px}}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="min-height: 1180px; background: var(--bg); color: var(--label); font-family: var(--font-ui); padding: 12px; box-sizing: border-box; display: flex; flex-wrap: wrap; gap: 28px; align-items: stretch;">
+
+<nav class="af-sidebar af-glass" aria-label="Hlavní menu" style="flex: 0 0 248px;">
+  <div class="af-sidebar__brand"><span class="af-sidebar__mark">AF</span>Splatno</div>
+  <a class="af-sidebar__item" href="Main.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg>Přehled</a>
+  <div class="af-sidebar__section">Prodej</div>
+  <a class="af-sidebar__item" href="Faktury.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>Faktury vydané<span class="af-sidebar__count af-sidebar__count--alert">1</span></a>
+  <a class="af-sidebar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M10 3h4v2h-4zM9.5 13l2 2 3.5-4"/></svg>Cenové nabídky<span class="af-sidebar__count">2</span></a>
+  <a class="af-sidebar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>Zálohové faktury</a>
+  <a class="af-sidebar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7 5 11l4 4"/><path d="M5 11h9a5 5 0 0 1 0 10h-2"/></svg>Dobropisy</a>
+  <a class="af-sidebar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3l3 3-3 3"/><path d="M4 11V9a3 3 0 0 1 3-3h13M7 21l-3-3 3-3"/><path d="M20 13v2a3 3 0 0 1-3 3H4"/></svg>Pravidelné faktury</a>
+  <a class="af-sidebar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/></svg>Úhrady</a>
+  <div class="af-sidebar__section">Evidence</div>
+  <a class="af-sidebar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 13 6.5 5h11L20 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 13h4.5a3.5 3.5 0 0 0 7 0H20"/></svg>Nákup</a>
+  <a class="af-sidebar__item" href="Adresar.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>Adresář</a>
+  <a class="af-sidebar__item" href="Cenik.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12V4h8l9 9-8 8z"/><circle cx="7.5" cy="8.5" r="1.3"/></svg>Ceník</a>
+  <a class="af-sidebar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5 12 4l9 5.5M5 10v8M9.7 10v8M14.3 10v8M19 10v8M3 20h18"/></svg>Banka</a>
+  <a class="af-sidebar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V11M10 20V5M15 20v-6M20 20V9"/></svg>Reporty</a>
+  <div style="flex-grow: 1;"></div>
+  <a class="af-sidebar__item" href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg>Nastavení</a>
+  <div style="height: 1px; background: var(--separator); margin: 8px 10px;"></div>
+  <a class="af-sidebar__item" href="#ucet" style="height: auto; padding: 8px 10px;">
+    <span aria-hidden="true" style="width: 30px; height: 30px; border-radius: 50%; background: var(--fill-strong); color: var(--label); display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: none;">AF</span>
+    <span style="display: flex; flex-direction: column; min-width: 0; line-height: 16px;"><span style="font-weight: 600; font-size: 13px;">Adam Fuják</span><span style="font-size: 12px; color: var(--label-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">jsem@adamfujak.cz</span></span>
+  </a>
+</nav>
+
+<main style="flex: 999 1 560px; min-width: 0; padding: 20px 20px 40px 0; display: flex; flex-direction: column; gap: 20px;">
+
+  <header class="af-toolbar">
+    <h1 style="margin: 0 auto 0 0; font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -0.3px;">Nastavení</h1>
+    <span style="font-size: 13px; color: var(--label-3);">Neuložené změny: 1</span>
+    <button class="af-btn">Zahodit</button>
+    <button class="af-btn af-btn--prominent">Uložit změny</button>
+  </header>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
+    <nav class="set-nav" aria-label="Sekce nastavení" style="flex: 0 0 200px;">
+      <a href="#firma" aria-current="true">Firma</a>
+      <a href="#ucty">Bankovní účty</a>
+      <a href="#rady">Číselné řady</a>
+      <a href="#doklady">Doklady a texty</a>
+      <a href="#emaily">E-maily a upomínky</a>
+      <a href="#vzhled">Vzhled</a>
+      <a href="#ucet">Účet a zabezpečení</a>
+      <a href="#zaloha">Záloha a export dat</a>
+    </nav>
+
+    <div style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 28px;">
+
+      <section id="firma" aria-labelledby="h-firma">
+        <h2 id="h-firma" class="af-list-header" style="font-size: 15px; line-height: 20px; font-weight: 600; color: var(--label); padding-bottom: 8px;">Firma</h2>
+        <div class="af-list">
+          <div class="set-row"><label class="set-label" for="s-name">Jméno a příjmení</label><input class="af-input" id="s-name" value="Adam Fuják"></div>
+          <div class="set-row"><label class="set-label" for="s-ico">IČO</label><div style="display: flex; gap: 8px; min-width: 0;"><input class="af-input af-mono" id="s-ico" value="07539266" style="max-width: 200px;"><button class="af-btn af-btn--tinted">Načíst z ARES</button></div></div>
+          <div class="set-row"><label class="set-label" for="s-dic">DIČ</label><input class="af-input af-mono" id="s-dic" placeholder="Nemám" value=""></div>
+          <div class="set-row"><label class="set-label" for="s-street">Ulice a číslo</label><input class="af-input" id="s-street" value="Krásné Loučky 27/27"></div>
+          <div class="set-row"><label class="set-label" for="s-city">PSČ a obec</label><div style="display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px;"><input class="af-input" id="s-zip" aria-label="PSČ" value="794 01"><input class="af-input" id="s-city" aria-label="Obec" value="Krnov"></div></div>
+          <div class="set-row"><label class="set-label" for="s-reg">Údaj o zápisu</label><input class="af-input" id="s-reg" value="Fyzická osoba zapsaná v živnostenském rejstříku."></div>
+          <div class="set-row"><span class="set-label">Plátce DPH</span><div style="display: flex; align-items: center; gap: 12px;"><button class="af-toggle" role="switch" aria-checked="false" aria-label="Plátce DPH"></button><span style="font-size: 13px; color: var(--label-3);">Na dokladech se tiskne „Nejsem plátce DPH.“</span></div></div>
+          <div class="set-row"><label class="set-label" for="s-mail">E-mail, telefon, web</label><div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;"><input class="af-input" id="s-mail" aria-label="E-mail" value="jsem@adamfujak.cz"><input class="af-input" id="s-tel" aria-label="Telefon" value="775 549 910"><input class="af-input" id="s-web" aria-label="Web" value="www.adamfujak.cz"></div></div>
+          <div class="set-row"><span class="set-label">Logo na dokladech</span><div style="display: flex; align-items: center; gap: 12px;"><span class="af-sidebar__mark" style="width: 44px; height: 44px; border-radius: 12px; font-size: 16px;">AF</span><button class="af-btn">Nahrát SVG nebo PNG</button><span style="font-size: 12px; color: var(--label-3);">Zatím zástupné logo</span></div></div>
+        </div>
+      </section>
+
+      <section id="ucty" aria-labelledby="h-ucty">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 0 16px 8px;">
+          <h2 id="h-ucty" style="margin: 0; font-size: 15px; line-height: 20px; font-weight: 600;">Bankovní účty</h2>
+          <button class="af-btn af-btn--plain af-btn--sm">Přidat účet</button>
+        </div>
+        <div class="af-list">
+          <div class="af-list__row">
+            <div class="af-list__label"><div style="font-weight: 600;">Česká spořitelna · podnikání</div><div class="af-mono" style="font-size: 12px; color: var(--label-3);">2401234567/0800 · CZ15 0800 0000 0024 0123 4567</div></div>
+            <span class="af-badge af-badge--green">Výchozí</span>
+            <svg class="af-list__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+          </div>
+        </div>
+      </section>
+
+      <section id="rady" aria-labelledby="h-rady">
+        <h2 id="h-rady" class="af-list-header" style="font-size: 15px; line-height: 20px; font-weight: 600; color: var(--label); padding-bottom: 8px;">Číselné řady</h2>
+        <div class="af-list">
+          <div class="af-list__row"><div class="af-list__label"><div style="font-weight: 600;">Faktury vydané</div><div style="font-size: 12px; color: var(--label-3);">Formát <span class="af-mono">{YYYY}{NNN}</span>, nová řada každý rok</div></div><span style="font-size: 13px; color: var(--label-2);">Příští číslo</span><span class="af-mono" style="font-weight: 600;">2026061</span><svg class="af-list__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></div>
+          <div class="af-list__row"><div class="af-list__label"><div style="font-weight: 600;">Cenové nabídky</div><div style="font-size: 12px; color: var(--label-3);">Formát <span class="af-mono">N{YYYY}{NNN}</span></div></div><span style="font-size: 13px; color: var(--label-2);">Příští číslo</span><span class="af-mono" style="font-weight: 600;">N2026015</span><svg class="af-list__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></div>
+        </div>
+        <div class="af-list-footer">Faktury navazují na číslování z iDokladu (poslední 2026060). Čísla se přidělují až při vystavení.</div>
+      </section>
+
+      <section id="doklady" aria-labelledby="h-doklady">
+        <h2 id="h-doklady" class="af-list-header" style="font-size: 15px; line-height: 20px; font-weight: 600; color: var(--label); padding-bottom: 8px;">Doklady a texty</h2>
+        <div class="af-list">
+          <div class="set-row"><span class="set-label">Výchozí splatnost</span><div class="af-segmented" role="group" aria-label="Výchozí splatnost" style="justify-self: start;"><button aria-pressed="false">7 dní</button><button aria-pressed="true">14 dní</button><button aria-pressed="false">30 dní</button></div></div>
+          <div class="set-row"><label class="set-label" for="s-ks">Konstantní symbol</label><input class="af-input af-mono" id="s-ks" value="0308" style="max-width: 120px;"></div>
+          <div class="set-row"><span class="set-label">Zaokrouhlovat na koruny</span><button class="af-toggle" role="switch" aria-checked="false" aria-label="Zaokrouhlovat na koruny"></button></div>
+          <div class="set-row"><label class="set-label" for="s-before">Text před položkami</label><input class="af-input" id="s-before" value="Fakturuji Vám za dodané služby:"></div>
+          <div class="set-row" style="align-items: start;"><label class="set-label" for="s-after" style="padding-top: 8px;">Text za položkami</label><textarea class="af-input" id="s-after" rows="2" style="height: auto; padding: 8px 12px; line-height: 20px; resize: vertical;">Dovoluji si Vás upozornit, že v případě nedodržení data splatnosti uvedeného na faktuře Vám mohu účtovat zákonný úrok z prodlení.</textarea></div>
+        </div>
+        <div class="af-list-footer">Platí pro nové doklady. Na konceptu jdou texty změnit.</div>
+      </section>
+
+      <section id="ucet" aria-labelledby="h-ucet">
+        <h2 id="h-ucet" class="af-list-header" style="font-size: 15px; line-height: 20px; font-weight: 600; color: var(--label); padding-bottom: 8px;">Účet a zabezpečení</h2>
+        <div class="af-list">
+          <div class="af-list__row"><span class="af-list__label">Přihlašovací e-mail</span><span class="af-list__value">jsem@adamfujak.cz</span></div>
+          <div class="af-list__row"><span class="af-list__label">Heslo</span><button class="af-btn af-btn--plain af-btn--sm">Změnit heslo</button></div>
+          <div class="af-list__row"><span class="af-list__label">Dvoufázové ověření</span><span class="af-badge af-badge--green">Zapnuto</span><button class="af-btn af-btn--plain af-btn--sm">Záložní kódy</button></div>
+          <div class="af-list__row"><span class="af-list__label">Tmavý režim</span><div class="af-segmented" role="group" aria-label="Vzhled"><button aria-pressed="false">Světlý</button><button aria-pressed="false">Tmavý</button><button aria-pressed="true">Podle systému</button></div></div>
+          <div class="af-list__row"><button class="af-btn af-btn--plain" style="color: var(--red); padding: 0;">Odhlásit se</button></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Vzhled"},"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light' };
+  }
+}
+</script>
+</body>
+</html>

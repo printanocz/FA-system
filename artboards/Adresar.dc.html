@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Adresář</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/affakturace/tokens.css">
+<link rel="stylesheet" href="ds/affakturace/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--accent-text)}a:hover{color:var(--label)}
+.ct-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;text-decoration:none;color:var(--label)}
+.ct-row:hover{background:var(--fill)}
+.ct-row[aria-current="true"]{background:var(--accent-soft)}
+.ct-avatar{width:36px;height:36px;border-radius:50%;background:var(--fill-strong);display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--label-2);flex:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="min-height: 1180px; background: var(--bg); color: var(--label); font-family: var(--font-ui); padding: 12px; box-sizing: border-box; display: flex; flex-wrap: wrap; gap: 28px; align-items: stretch;">
+
+<nav class="af-sidebar af-glass" aria-label="Hlavní menu" style="flex: 0 0 248px;">
+  <div class="af-sidebar__brand"><span class="af-sidebar__mark">AF</span>Splatno</div>
+  <a class="af-sidebar__item" href="Main.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg>Přehled</a>
+  <div class="af-sidebar__section">Prodej</div>
+  <a class="af-sidebar__item" href="Faktury.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>Faktury vydané<span class="af-sidebar__count af-sidebar__count--alert">1</span></a>
+  <a class="af-sidebar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M10 3h4v2h-4zM9.5 13l2 2 3.5-4"/></svg>Cenové nabídky<span class="af-sidebar__count">2</span></a>
+  <a class="af-sidebar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>Zálohové faktury</a>
+  <a class="af-sidebar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7 5 11l4 4"/><path d="M5 11h9a5 5 0 0 1 0 10h-2"/></svg>Dobropisy</a>
+  <a class="af-sidebar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3l3 3-3 3"/><path d="M4 11V9a3 3 0 0 1 3-3h13M7 21l-3-3 3-3"/><path d="M20 13v2a3 3 0 0 1-3 3H4"/></svg>Pravidelné faktury</a>
+  <a class="af-sidebar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/></svg>Úhrady</a>
+  <div class="af-sidebar__section">Evidence</div>
+  <a class="af-sidebar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 13 6.5 5h11L20 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 13h4.5a3.5 3.5 0 0 0 7 0H20"/></svg>Nákup</a>
+  <a class="af-sidebar__item" href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>Adresář</a>
+  <a class="af-sidebar__item" href="Cenik.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12V4h8l9 9-8 8z"/><circle cx="7.5" cy="8.5" r="1.3"/></svg>Ceník</a>
+  <a class="af-sidebar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5 12 4l9 5.5M5 10v8M9.7 10v8M14.3 10v8M19 10v8M3 20h18"/></svg>Banka</a>
+  <a class="af-sidebar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V11M10 20V5M15 20v-6M20 20V9"/></svg>Reporty</a>
+  <div style="flex-grow: 1;"></div>
+  <a class="af-sidebar__item" href="Nastaveni.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg>Nastavení</a>
+  <div style="height: 1px; background: var(--separator); margin: 8px 10px;"></div>
+  <a class="af-sidebar__item" href="Nastaveni.dc.html" style="height: auto; padding: 8px 10px;">
+    <span aria-hidden="true" style="width: 30px; height: 30px; border-radius: 50%; background: var(--fill-strong); color: var(--label); display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: none;">AF</span>
+    <span style="display: flex; flex-direction: column; min-width: 0; line-height: 16px;"><span style="font-weight: 600; font-size: 13px;">Adam Fuják</span><span style="font-size: 12px; color: var(--label-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">jsem@adamfujak.cz</span></span>
+  </a>
+</nav>
+
+<main style="flex: 999 1 560px; min-width: 0; padding: 20px 20px 40px 0; display: flex; flex-direction: column; gap: 20px;">
+
+  <header class="af-toolbar">
+    <h1 style="margin: 0 auto 0 0; font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -0.3px;">Adresář</h1>
+    <label class="af-search" style="width: 260px; max-width: 100%;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg><input id="q-adresar" placeholder="Název, IČO, e-mail"></label>
+    <button class="af-btn af-btn--prominent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nový kontakt</button>
+  </header>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
+
+    <section class="af-card" style="flex: 1 1 340px; max-width: 400px; min-width: 0; padding: 8px; display: flex; flex-direction: column; gap: 2px;" aria-label="Seznam kontaktů">
+      <div style="display: flex; justify-content: space-between; padding: 8px 12px; font-size: 12px; color: var(--label-3);"><span>24 kontaktů</span><span>Řadit: obrat 2026</span></div>
+      <sc-for list="{{contacts}}" as="c" hint-placeholder-count="8">
+        <a class="ct-row" href="#" aria-current="{{c.current}}">
+          <span class="ct-avatar" aria-hidden="true">{{c.initials}}</span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+            <span style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{c.name}}</span>
+            <span style="font-size: 12px; line-height: 16px; color: var(--label-3);">IČ <span class="af-mono" style="font-size: 12px;">{{c.ico}}</span></span>
+          </span>
+          <span style="font-size: 13px; font-variant-numeric: tabular-nums; color: var(--label-2); white-space: nowrap;">{{c.turnover}}</span>
+        </a>
+      </sc-for>
+    </section>
+
+    <section style="flex: 999 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 20px;" aria-labelledby="h-contact">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px;">
+        <span class="ct-avatar" aria-hidden="true" style="width: 56px; height: 56px; font-size: 20px;">PH</span>
+        <div style="margin-right: auto; display: flex; flex-direction: column; gap: 2px;">
+          <h2 id="h-contact" style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.2px;">Pekárna Hrubý s.r.o.</h2>
+          <span style="font-size: 13px; color: var(--label-3);">Ověřeno v ARES 25. 10. 2026</span>
+        </div>
+        <button class="af-btn">Upravit</button>
+        <a class="af-btn af-btn--tinted" href="Editor.dc.html" style="text-decoration: none;">Nová faktura</a>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;">
+        <div class="af-card" style="padding: 16px; display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 13px; color: var(--label-2);">Obrat 2026</span><span style="font-size: 22px; line-height: 28px; font-weight: 600; font-variant-numeric: tabular-nums;">61 200 Kč</span><span style="font-size: 12px; color: var(--label-3);">4 faktury</span></div>
+        <div class="af-card" style="padding: 16px; display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 13px; color: var(--label-2);">Neuhrazeno</span><span style="font-size: 22px; line-height: 28px; font-weight: 600; font-variant-numeric: tabular-nums;">24 500 Kč</span><span style="font-size: 12px; color: var(--label-3);">splatnost 26. 10.</span></div>
+        <div class="af-card" style="padding: 16px; display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 13px; color: var(--label-2);">Platí průměrně</span><span style="font-size: 22px; line-height: 28px; font-weight: 600; font-variant-numeric: tabular-nums;">9 dní</span><span style="font-size: 12px; color: var(--label-3);">od vystavení</span></div>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
+        <div style="flex: 1 1 280px; min-width: 0;">
+          <div class="af-list-header">Fakturační údaje</div>
+          <div class="af-list">
+            <div class="af-list__row"><span class="af-list__label">IČ</span><span class="af-list__value af-mono">08765432</span></div>
+            <div class="af-list__row"><span class="af-list__label">DIČ</span><span class="af-list__value af-mono">CZ08765432</span></div>
+            <div class="af-list__row" style="align-items: flex-start;"><span class="af-list__label">Adresa</span><span class="af-list__value">Hlavní náměstí 14<br>792 01 Bruntál</span></div>
+            <div class="af-list__row"><button class="af-btn af-btn--plain af-btn--sm" style="padding: 0;">Aktualizovat z ARES</button></div>
+          </div>
+        </div>
+        <div style="flex: 1 1 280px; min-width: 0;">
+          <div class="af-list-header">Kontakt a výchozí hodnoty</div>
+          <div class="af-list">
+            <div class="af-list__row"><span class="af-list__label">E-mail pro faktury</span><span class="af-list__value">objednavky@pekarnahruby.cz</span></div>
+            <div class="af-list__row"><span class="af-list__label">Kopie</span><span class="af-list__value">ucetni@pekarnahruby.cz</span></div>
+            <div class="af-list__row"><span class="af-list__label">Telefon</span><span class="af-list__value">554 712 300</span></div>
+            <div class="af-list__row"><span class="af-list__label">Splatnost</span><span class="af-list__value">14 dní</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="af-list-header">Doklady</div>
+        <div class="af-list">
+          <sc-for list="{{docs}}" as="d" hint-placeholder-count="4">
+            <div class="af-list__row">
+              <span class="af-mono" style="width: 76px;">{{d.no}}</span>
+              <span class="af-list__label" style="color: var(--label-2);">{{d.desc}}</span>
+              <span style="font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap;">{{d.amount}}</span>
+              <span class="{{d.badge}}">{{d.state}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Vzhled"},"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const contacts = [
+      ['SL', 'Studio Lipka s.r.o.', '27654321', '182 400 Kč', false],
+      ['SN', 'Stavebniny Novák a.s.', '25871234', '96 000 Kč', false],
+      ['PH', 'Pekárna Hrubý s.r.o.', '08765432', '61 200 Kč', true],
+      ['ES', 'Elektro Šrámek', '73214567', '43 700 Kč', false],
+      ['AV', 'Autoservis Vávra', '62458791', '33 600 Kč', false],
+      ['PL', 'Penzion Pod Lesem', '05123987', '21 400 Kč', false],
+      ['KK', 'Spolek Krnovská kultura, z. s.', '22714563', '18 900 Kč', false],
+      ['KM', 'Kavárna U Mlýna', '09451236', '12 800 Kč', false],
+      ['VH', 'Vinotéka Habánek', '04987123', '0 Kč', false]
+    ].map((x) => ({ initials: x[0], name: x[1], ico: x[2], turnover: x[3], current: x[4] }));
+    const docs = [
+      { no: '2026062', desc: 'Návrh obalů, 3 varianty', amount: '24 500 Kč', badge: 'af-badge af-badge--blue', state: 'Odesláno' },
+      { no: '2026049', desc: 'Etikety na sezónní pečivo', amount: '12 900 Kč', badge: 'af-badge af-badge--green', state: 'Uhrazeno' },
+      { no: '2026031', desc: 'Leták A5, akce na květen', amount: '9 800 Kč', badge: 'af-badge af-badge--green', state: 'Uhrazeno' },
+      { no: '2026012', desc: 'Úprava loga a vizitky', amount: '14 000 Kč', badge: 'af-badge af-badge--green', state: 'Uhrazeno' }
+    ];
+    return { theme: this.props.theme ?? 'light', contacts, docs };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Faktura 2026062 PDF</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/affakturace/tokens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;display=swap">
+<style>
+body{margin:0}
+.pdf-label{font-size:12px;line-height:16px;color:var(--label-2)}
+.pdf-mono{font-family:"DM Mono",ui-monospace,monospace}
+.pdf-table{width:100%;border-collapse:collapse;font-size:13px;line-height:18px}
+.pdf-table th{font-size:12px;line-height:16px;font-weight:600;color:var(--label-2);text-align:left;padding:0 0 8px;border-bottom:1.5px solid var(--label)}
+.pdf-table td{padding:11px 0;border-bottom:1px solid #C9CEC2;vertical-align:top}
+.pdf-table .n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:16px}
+</style>
+</helmet>
+<div data-theme="light" style="width: 794px; height: 1123px; box-sizing: border-box; padding: 56px 56px 40px; background: #FFFFFF; color: var(--label); font-family: 'DM Sans', system-ui, sans-serif; display: flex; flex-direction: column; gap: 28px; font-size: 13px; line-height: 18px;">
+
+  <header style="display: flex; justify-content: space-between; align-items: flex-start; gap: 24px;">
+    <div style="display: flex; flex-direction: column; gap: 2px;">
+      <span style="font-size: 14px; line-height: 18px; color: var(--label-2);">Faktura č.</span>
+      <span style="font-size: 40px; line-height: 44px; font-weight: 700; letter-spacing: -1px; font-variant-numeric: tabular-nums;">2026062</span>
+    </div>
+    <div aria-label="Logo, bude doplněno" style="width: 56px; height: 56px; border-radius: 14px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-size: 20px; font-weight: 700; letter-spacing: -0.5px;">AF</div>
+  </header>
+
+  <section style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px;">
+    <div style="display: flex; flex-direction: column; gap: 4px; padding: 16px 0;">
+      <span class="pdf-label">Dodavatel</span>
+      <span style="font-size: 15px; line-height: 20px; font-weight: 700;">Adam Fuják</span>
+      <span>Krásné Loučky 27/27<br>794 01 Krnov</span>
+      <span>IČ <span class="pdf-mono">07539266</span></span>
+      <span style="color: var(--label-2);">jsem@adamfujak.cz · 775 549 910<br>www.adamfujak.cz</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px; padding: 16px; background: var(--bg); border-radius: 14px;">
+      <span class="pdf-label">Odběratel</span>
+      <span style="font-size: 15px; line-height: 20px; font-weight: 700;">Pekárna Hrubý s.r.o.</span>
+      <span>Hlavní náměstí 14<br>792 01 Bruntál</span>
+      <span>IČ <span class="pdf-mono">08765432</span> · DIČ <span class="pdf-mono">CZ08765432</span></span>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid #C9CEC2; border-bottom: 1px solid #C9CEC2;">
+    <div style="padding: 12px 12px 12px 0; display: flex; flex-direction: column; gap: 2px;"><span class="pdf-label">Datum vystavení</span><span style="font-weight: 500;">12. 10. 2026</span></div>
+    <div style="padding: 12px; display: flex; flex-direction: column; gap: 2px;"><span class="pdf-label">Datum splatnosti</span><span style="font-weight: 700; font-size: 15px;">26. 10. 2026</span></div>
+    <div style="padding: 12px; display: flex; flex-direction: column; gap: 2px;"><span class="pdf-label">Variabilní symbol</span><span class="pdf-mono" style="font-weight: 500;">2026062</span></div>
+    <div style="padding: 12px 0 12px 12px; display: flex; flex-direction: column; gap: 2px;"><span class="pdf-label">Způsob úhrady</span><span style="font-weight: 500;">Převodem</span></div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 14px;">
+    <p style="margin: 0;">Fakturuji Vám za dodané služby:</p>
+    <table class="pdf-table">
+      <thead><tr><th>Označení dodávky</th><th class="n">Počet</th><th>&nbsp;M.j.</th><th class="n">Cena za m.j.</th><th class="n">Celkem</th></tr></thead>
+      <tbody>
+        <tr><td>Návrh obalu Kváskový chléb, 3 varianty</td><td class="n">1,00</td><td>&nbsp;ks</td><td class="n">14 500,00</td><td class="n">14 500,00</td></tr>
+        <tr><td>Úpravy vybrané varianty, 2 kola korektur</td><td class="n">10,00</td><td>&nbsp;hod.</td><td class="n">600,00</td><td class="n">6 000,00</td></tr>
+        <tr><td>Příprava tiskových dat pro výrobce obalů</td><td class="n">1,00</td><td>&nbsp;ks</td><td class="n">4 000,00</td><td class="n">4 000,00</td></tr>
+      </tbody>
+    </table>
+    <p style="margin: 0; color: var(--label-2);">Dovoluji si Vás upozornit, že v případě nedodržení data splatnosti uvedeného na faktuře Vám mohu účtovat zákonný úrok z prodlení.</p>
+  </section>
+
+  <div style="flex-grow: 1;"></div>
+
+  <section style="display: flex; gap: 24px; align-items: flex-end; justify-content: space-between;">
+    <div style="display: flex; gap: 20px; align-items: flex-start;">
+      <figure style="margin: 0; display: flex; flex-direction: column; gap: 6px; align-items: center;">
+        <img src="/_blob/56cc6061797aada8ab499104db457ef1" alt="QR Platba pro fakturu 2026062" style="width: 132px; height: 132px; display: block;">
+        <figcaption style="font-size: 12px; line-height: 16px; font-weight: 600;">QR Platba</figcaption>
+      </figure>
+      <div style="display: grid; grid-template-columns: auto auto; gap: 4px 16px; align-content: start;">
+        <span class="pdf-label">Bankovní účet</span><span class="pdf-mono" style="font-weight: 500; font-size: 14px;">2401234567/0800</span>
+        <span class="pdf-label">IBAN</span><span class="pdf-mono">CZ15 0800 0000 0024 0123 4567</span>
+        <span class="pdf-label">SWIFT</span><span class="pdf-mono">GIBACZPX</span>
+        <span class="pdf-label">Variabilní symbol</span><span class="pdf-mono">2026062</span>
+        <span class="pdf-label">Konstantní symbol</span><span class="pdf-mono">0308</span>
+      </div>
+    </div>
+    <div style="min-width: 240px; padding: 20px 24px; border-radius: 22px; background: var(--accent); color: var(--on-accent); display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
+      <span style="font-size: 13px; line-height: 18px; font-weight: 500;">Celkem k úhradě</span>
+      <span style="font-size: 32px; line-height: 38px; font-weight: 700; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; white-space: nowrap;">24 500,00 Kč</span>
+    </div>
+  </section>
+
+  <footer style="display: flex; justify-content: space-between; gap: 16px; padding-top: 12px; border-top: 1px solid #C9CEC2; font-size: 12px; line-height: 16px; color: var(--label-2);">
+    <span>Fyzická osoba zapsaná v živnostenském rejstříku. Nejsem plátce DPH.</span>
+    <span>Strana 1/1</span>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":794,"height":1123}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

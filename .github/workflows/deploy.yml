@@ -1,0 +1,266 @@
+name: Deploy
+
+# Merge do main = nasazení na splatno.adamfujak.cz (FTP/SFTP, bez SSH).
+# Postup přípravy serveru a GitHub secrets: docs/DEPLOY.md
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Dvě nasazení najednou by si přepsala soubory; další čeká, nic se neruší uprostřed.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Secrets
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.secrets.outputs.ready }}
+    steps:
+      - id: secrets
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_PATH: ${{ secrets.FTP_PATH }}
+          FTP_PROTOCOL: ${{ secrets.FTP_PROTOCOL }}
+          HEALTH_TOKEN: ${{ secrets.HEALTH_TOKEN }}
+        run: |
+          missing=""
+          for name in FTP_HOST FTP_USER FTP_PASSWORD FTP_PATH FTP_PROTOCOL HEALTH_TOKEN; do
+            if [ -z "${!name}" ]; then
+              missing="$missing $name"
+            fi
+          done
+
+          if [ -n "$missing" ]; then
+            echo "::warning title=Nasazení přeskočeno::Chybí GitHub secrets:$missing. Doplň je podle docs/DEPLOY.md (Settings > Secrets and variables > Actions)."
+            echo "Chybí GitHub secrets:$missing"
+            echo "Nasazení se přeskakuje, běh končí úspěchem."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          case "$FTP_PROTOCOL" in
+            sftp|ftp) ;;
+            *)
+              echo "::error title=Špatný FTP_PROTOCOL::FTP_PROTOCOL musí být sftp, nebo ftp (FTP přes TLS)."
+              exit 1
+              ;;
+          esac
+
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Build and upload
+    needs: check
+    if: needs.check.outputs.ready == 'true' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      APP_URL: ${{ vars.APP_URL || 'https://splatno.adamfujak.cz' }}
+      # Jak dlouho čekat na dokončení nasazení cronem (minuty, výchozí 5, nejvýše 30).
+      DEPLOY_WAIT_MINUTES: ${{ vars.DEPLOY_WAIT_MINUTES || '5' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, intl, pdo_sqlite, sqlite3, gd, zip
+          tools: composer:v2
+          coverage: none
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install PHP dependencies (with dev, for tests)
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      # Nasazuje se jen to, co prošlo stejnými kontrolami jako PR.
+      - name: Pint
+        run: vendor/bin/pint --test
+
+      - name: PHPStan
+        run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+
+      - name: Pest
+        run: vendor/bin/pest
+
+      - name: Install production PHP dependencies
+        run: |
+          composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction --no-progress
+          # Ne-produkční .env z CI se nikdy nenahrává; cache z CI na server nepatří.
+          rm -f bootstrap/cache/*.php
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Build frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Prepare upload
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PATH: ${{ secrets.FTP_PATH }}
+          FTP_PROTOCOL: ${{ secrets.FTP_PROTOCOL }}
+          # Volitelné: řádek known_hosts serveru (ssh-keyscan -t ed25519 host). Bez něj se SFTP klíč přijme při prvním spojení.
+          SFTP_HOST_KEY: ${{ secrets.SFTP_HOST_KEY }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/deploy"
+          cd "$RUNNER_TEMP/deploy"
+
+          # Soubory z gitu dostanou čas posledního commitu, který je změnil. lftp pak nahraje jen změněné.
+          cd "$GITHUB_WORKSPACE"
+          git ls-files -z -- app bootstrap config database lang resources routes public artisan composer.json composer.lock |
+            while IFS= read -r -d '' file; do
+              touch -d "@$(git log -1 --format=%ct -- "$file")" "$file"
+            done
+          # Sestavené assety mají hash v názvu: stejný název = stejný obsah, takže pevný čas.
+          find public/build -type f -exec touch -d @946684800 {} +
+
+          cd "$RUNNER_TEMP/deploy"
+          printf '%s' "$GITHUB_SHA" > deploy.pending
+          sha256sum "$GITHUB_WORKSPACE/composer.lock" | cut -d' ' -f1 | tr -d '\n' > lock-sha
+          # Údržbový režim Laravelu (formát souboru, který zapisuje php artisan down).
+          printf '%s' '{"except":[],"redirect":null,"retry":60,"refresh":null,"secret":null,"status":503,"template":null}' > down
+
+          if [ "$FTP_PROTOCOL" = "sftp" ] && [ -z "$SFTP_HOST_KEY" ]; then
+            echo "::warning title=SFTP klíč serveru se neověřuje::Doplň secret SFTP_HOST_KEY (docs/DEPLOY.md), jinak se klíč serveru přijme při každém spojení."
+          fi
+
+          # Společná nastavení lftp. Šifrování je povinné: nešifrované FTP se nepoužije nikdy.
+          {
+            echo "set cmd:fail-exit yes"
+            echo "set net:max-retries 5"
+            echo "set net:timeout 30"
+            echo "set net:reconnect-interval-base 5"
+            echo "set xfer:clobber yes"
+            echo "set ssl:verify-certificate true"
+            if [ "$FTP_PROTOCOL" = "sftp" ]; then
+              if [ -n "$SFTP_HOST_KEY" ]; then
+                mkdir -p ~/.ssh
+                printf '%s\n' "$SFTP_HOST_KEY" >> ~/.ssh/known_hosts
+                echo 'set sftp:connect-program "ssh -a -x -o StrictHostKeyChecking=yes"'
+              else
+                echo 'set sftp:connect-program "ssh -a -x -o StrictHostKeyChecking=accept-new"'
+              fi
+            else
+              echo "set ftp:ssl-force true"
+              echo "set ftp:ssl-protect-data true"
+              echo "set ftp:ssl-allow true"
+            fi
+            # --env-password: heslo z proměnné LFTP_PASSWORD (bez něj by ji lftp ignoroval).
+            echo "open --env-password -u \"$FTP_USER\" \"${FTP_PROTOCOL}://${FTP_HOST}\""
+            echo "cd \"$FTP_PATH\""
+          } > header.lftp
+
+      - name: Install lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+
+      - name: Upload
+        working-directory: ${{ runner.temp }}/deploy
+        env:
+          # lftp si heslo bere z této proměnné, takže není na příkazové řádce ani v souboru.
+          LFTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          WS="$GITHUB_WORKSPACE"
+
+          # Vendor se nahrává jen při změně composer.lock. Otisk uložený na serveru se zapisuje až po úspěšném nahrání.
+          { cat header.lftp; echo "cat vendor/.lock-sha"; } > read-lock.lftp
+          remote_lock="$(lftp -f read-lock.lftp 2>/dev/null || true)"
+          upload_vendor=false
+          if [ "$remote_lock" != "$(cat lock-sha)" ]; then
+            upload_vendor=true
+          fi
+          echo "vendor se nahrává: $upload_vendor"
+
+          {
+            cat header.lftp
+
+            # Kostra složek (při prvním nasazení). Nic z jejich obsahu se nemaže.
+            echo "mkdir -p -f storage/app storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache"
+
+            # 1) Údržbový režim.
+            echo "put -o storage/framework/down down"
+
+            # 2) Kód. --delete jen u adresářů vlastního kódu; .env, storage/, node_modules, tests a .git* se nenahrávají ani nemažou.
+            for dir in app config database lang resources routes; do
+              if [ -d "$WS/$dir" ]; then
+                echo "mirror -R --delete --parallel=3 --exclude-glob '.DS_Store' --exclude-glob '*.sqlite' \"$WS/$dir\" \"$dir\""
+              fi
+            done
+            echo "mirror -R --delete --parallel=3 --exclude-glob 'cache/*.php' \"$WS/bootstrap\" bootstrap"
+            echo "mirror -R --delete --parallel=3 --exclude '^storage(/|\$)' \"$WS/public\" public"
+            for file in artisan composer.json composer.lock; do
+              echo "put -o $file \"$WS/$file\""
+            done
+
+            if [ "$upload_vendor" = "true" ]; then
+              echo "mirror -R --delete --parallel=4 --exclude '^\\.lock-sha\$' \"$WS/vendor\" vendor"
+              echo "put -o vendor/.lock-sha lock-sha"
+            fi
+
+            # 3) Značka pro app:post-deploy (migrace, cache, konec údržby). Až jako poslední.
+            echo "put -o storage/app/deploy.pending deploy.pending"
+          } > deploy.lftp
+
+          lftp -f deploy.lftp
+
+      - name: Wait for the new version
+        env:
+          HEALTH_TOKEN: ${{ secrets.HEALTH_TOKEN }}
+        run: |
+          case "$APP_URL" in
+            https://*) ;;
+            *) echo "::error::APP_URL musí začínat https://"; exit 1 ;;
+          esac
+          url="${APP_URL%/}/_health"
+
+          minutes="$DEPLOY_WAIT_MINUTES"
+          case "$minutes" in
+            ''|*[!0-9]*) echo "::warning::DEPLOY_WAIT_MINUTES není celé číslo, používá se 5."; minutes=5 ;;
+          esac
+          if [ "$minutes" -lt 1 ]; then minutes=5; fi
+          if [ "$minutes" -gt 30 ]; then minutes=30; fi
+          attempts=$((minutes * 4))
+          echo "Čekám na $url (verze ${GITHUB_SHA:0:7}), nejdéle $minutes min. Dokončení provede cron na serveru."
+
+          for attempt in $(seq 1 "$attempts"); do
+            body="$(curl -sS --max-time 10 -H "X-Health-Token: $HEALTH_TOKEN" "$url" || true)"
+            if echo "$body" | jq -e --arg sha "$GITHUB_SHA" '.version == $sha and .maintenance == false and .db == "ok"' > /dev/null 2>&1; then
+              echo "Nasazeno: $body"
+              exit 0
+            fi
+            echo "[$attempt/$attempts] $(echo "$body" | head -c 300)"
+            sleep 15
+          done
+
+          echo "::error title=Nasazení nedoběhlo::Healthcheck do $minutes min nepotvrdil verzi ${GITHUB_SHA:0:7}. Aplikace může zůstat v údržbě; viz storage/logs/deploy.log na serveru a docs/DEPLOY.md (Řešení potíží)."
+          exit 1

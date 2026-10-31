@@ -1,0 +1,163 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-25T07:50:00Z"
+  },
+  "title": "Splatno — návrhy obrazovek",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1180,
+      "title": "Přehled — desktop",
+      "expand": "fill"
+    },
+    "Faktury.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 1180,
+      "title": "Faktury vydané — desktop",
+      "expand": "fill"
+    },
+    "Editor.dc.html": {
+      "x": 3040,
+      "y": 0,
+      "w": 1440,
+      "h": 1180,
+      "title": "Nová faktura — desktop",
+      "expand": "fill"
+    },
+    "Mobil-Prehled.dc.html": {
+      "x": 0,
+      "y": 1600,
+      "w": 390,
+      "h": 844,
+      "title": "Přehled — mobil",
+      "radius": 44
+    },
+    "Mobil-Prehled-tmavy.dc.html": {
+      "x": 470,
+      "y": 1600,
+      "w": 390,
+      "h": 844,
+      "title": "Přehled — mobil, tmavý režim",
+      "radius": 44
+    },
+    "Mobil-Faktury.dc.html": {
+      "x": 940,
+      "y": 1600,
+      "w": 390,
+      "h": 844,
+      "title": "Faktury — mobil",
+      "radius": 44
+    },
+    "Faktura-PDF.dc.html": {
+      "x": 3040,
+      "y": 1600,
+      "w": 794,
+      "h": 1123,
+      "title": "PDF faktury — A4",
+      "paper": "a4"
+    },
+    "Detail.dc.html": {
+      "x": 1520,
+      "y": 1600,
+      "w": 1440,
+      "h": 1180,
+      "title": "Detail faktury — desktop",
+      "expand": "fill"
+    },
+    "Prihlaseni.dc.html": {
+      "x": 0,
+      "y": 3200,
+      "w": 1440,
+      "h": 900,
+      "title": "Přihlášení a ověřovací kód",
+      "expand": "fill"
+    },
+    "Nastaveni.dc.html": {
+      "x": 1520,
+      "y": 3200,
+      "w": 1440,
+      "h": 1180,
+      "title": "Nastavení — firma a doklady",
+      "expand": "fill"
+    },
+    "Adresar.dc.html": {
+      "x": 3040,
+      "y": 3200,
+      "w": 1440,
+      "h": 1180,
+      "title": "Adresář — seznam a karta kontaktu",
+      "expand": "fill"
+    },
+    "Cenik.dc.html": {
+      "x": 4560,
+      "y": 3200,
+      "w": 1440,
+      "h": 1180,
+      "title": "Ceník",
+      "expand": "fill"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Faktury.dc.html",
+    "Editor.dc.html",
+    "Mobil-Prehled.dc.html",
+    "Mobil-Prehled-tmavy.dc.html",
+    "Mobil-Faktury.dc.html",
+    "Faktura-PDF.dc.html",
+    "Detail.dc.html",
+    "Prihlaseni.dc.html",
+    "Nastaveni.dc.html",
+    "Adresar.dc.html",
+    "Cenik.dc.html"
+  ],
+  "notes": {
+    "desktop": {
+      "x": 0,
+      "y": -300,
+      "text": "Desktop · světlý režim (tmavý přes Tweaks)",
+      "kind": "title1",
+      "maxW": 4480
+    },
+    "mobil": {
+      "x": 0,
+      "y": 1300,
+      "text": "Mobil",
+      "kind": "title1",
+      "maxW": 1330
+    },
+    "doklad": {
+      "x": 1520,
+      "y": 1300,
+      "text": "Detail faktury a PDF",
+      "kind": "title1",
+      "maxW": 2314
+    },
+    "evidence": {
+      "x": 0,
+      "y": 2900,
+      "text": "Přihlášení, nastavení, adresář, ceník",
+      "kind": "title1",
+      "maxW": 6000
+    }
+  },
+  "designSystems": [
+    {
+      "title": "Splatno",
+      "namespace": "affakturace",
+      "artifact": "https://claude.ai/artifact/15MnrYTgPHsZM5mQjyLJKs",
+      "version": "1792914076-9c71",
+      "copiedAt": "2026-10-25T07:50:00Z"
+    }
+  ]
+}

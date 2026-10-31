@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Přehled na mobilu</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/affakturace/tokens.css">
+<link rel="stylesheet" href="ds/affakturace/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--accent-text)}a:hover{color:var(--label)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; position: relative; overflow: hidden; background: var(--bg); color: var(--label); font-family: var(--font-ui);">
+  <div style="padding: 62px 16px 140px; display: flex; flex-direction: column; gap: 16px; box-sizing: border-box;">
+
+    <header style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;">
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <span style="font-size: 13px; line-height: 18px; color: var(--label-3);">Neděle 25. října</span>
+        <h1 style="margin: 0; font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: -0.4px;">Přehled</h1>
+      </div>
+      <button class="af-btn af-btn--glass af-btn--icon af-btn--lg" aria-label="Hledat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg></button>
+    </header>
+
+    <div class="af-segmented" role="group" aria-label="Období" style="display: flex;">
+      <button aria-pressed="false" style="flex: 1; justify-content: center;">Měsíc</button>
+      <button aria-pressed="false" style="flex: 1; justify-content: center;">Kvartál</button>
+      <button aria-pressed="true" style="flex: 1; justify-content: center;">Rok</button>
+    </div>
+
+    <section style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;" aria-label="Souhrn">
+      <div class="af-card" style="padding: 16px; display: flex; flex-direction: column; gap: 4px;">
+        <span style="font-size: 13px; line-height: 18px; color: var(--label-2);">Rok 2026</span>
+        <span style="font-size: 22px; line-height: 28px; font-weight: 600; font-variant-numeric: tabular-nums;">610 300 Kč</span>
+        <span style="font-size: 12px; line-height: 16px; color: var(--accent-text); font-weight: 600;">+16 % proti 2025</span>
+      </div>
+      <div class="af-card" style="padding: 16px; display: flex; flex-direction: column; gap: 4px;">
+        <span style="font-size: 13px; line-height: 18px; color: var(--label-2);">Říjen</span>
+        <span style="font-size: 22px; line-height: 28px; font-weight: 600; font-variant-numeric: tabular-nums;">51 300 Kč</span>
+        <span style="font-size: 12px; line-height: 16px; color: var(--accent-text); font-weight: 600;">+18 % proti říjnu 2025</span>
+      </div>
+      <div class="af-card" style="padding: 16px; display: flex; flex-direction: column; gap: 4px;">
+        <span style="font-size: 13px; line-height: 18px; color: var(--label-2);">Neuhrazeno</span>
+        <span style="font-size: 22px; line-height: 28px; font-weight: 600; font-variant-numeric: tabular-nums;">36 100 Kč</span>
+        <span style="font-size: 12px; line-height: 16px; color: var(--label-3);">3 faktury</span>
+      </div>
+      <div class="af-card" style="padding: 16px; display: flex; flex-direction: column; gap: 4px;">
+        <span style="font-size: 13px; line-height: 18px; color: var(--label-2);">Po splatnosti</span>
+        <span style="font-size: 22px; line-height: 28px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--red);">8 400 Kč</span>
+        <span style="font-size: 12px; line-height: 16px; color: var(--label-3);">1 faktura</span>
+      </div>
+    </section>
+
+    <section class="af-card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;" aria-labelledby="m-chart">
+      <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <h2 id="m-chart" style="margin: 0; font-size: 15px; line-height: 20px; font-weight: 600;">Fakturace po měsících</h2>
+        <span style="font-size: 12px; color: var(--label-3);">tis. Kč</span>
+      </div>
+      <div style="height: 96px; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; align-items: end; border-bottom: 1px solid var(--separator);">
+        <sc-for list="{{months}}" as="m" hint-placeholder-count="10">
+          <div style="border-radius: 5px 5px 2px 2px; background: {{m.color}}; height: {{m.h}}px;" title="{{m.tip}}"></div>
+        </sc-for>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; font-size: 10px; line-height: 12px; color: var(--label-3); text-align: center;">
+        <sc-for list="{{months}}" as="m" hint-placeholder-count="10"><span>{{m.short}}</span></sc-for>
+      </div>
+    </section>
+
+    <section>
+      <div class="af-list-header">Po splatnosti</div>
+      <div class="af-list">
+        <div class="af-list__row">
+          <div class="af-list__label">
+            <div style="font-weight: 600;">Autoservis Vávra</div>
+            <div style="font-size: 12px; line-height: 16px; color: var(--label-3);"><span class="af-mono" style="font-size: 12px;">2026059</span> · 11 dní po splatnosti</div>
+          </div>
+          <span style="font-weight: 600; font-variant-numeric: tabular-nums;">8 400 Kč</span>
+        </div>
+        <div class="af-list__row"><button class="af-btn af-btn--tinted" style="width: 100%;">Odeslat upomínku</button></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="af-list-header">Limit pro registraci k DPH</div>
+      <div class="af-list">
+        <div class="af-list__row" style="flex-direction: column; align-items: stretch; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; font-size: 14px;"><span>610 300 Kč</span><span style="color: var(--label-3);">z 2 000 000 Kč</span></div>
+          <div class="af-meter" role="img" aria-label="31 procent limitu"><span style="width: 31%;"></span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <nav class="af-tabbar" aria-label="Hlavní menu" style="position: absolute; left: 16px; right: 16px; bottom: 30px;">
+    <div class="af-tabbar__pill af-glass">
+      <a class="af-tabbar__item" href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg>Přehled</a>
+      <a class="af-tabbar__item" href="Mobil-Faktury.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>Faktury</a>
+      <a class="af-tabbar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M10 3h4v2h-4zM9.5 13l2 2 3.5-4"/></svg>Nabídky</a>
+      <a class="af-tabbar__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>Další</a>
+    </div>
+    <button class="af-tabbar__fab" aria-label="Nová faktura"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Vzhled"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const v = [48.2, 61.5, 72.3, 55.8, 69.1, 81.4, 43.9, 52.6, 74.2, 51.3];
+    const short = ['L', 'Ú', 'B', 'D', 'K', 'Č', 'Č', 'S', 'Z', 'Ř'];
+    const names = ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen'];
+    const months = v.map((x, i) => ({
+      short: short[i],
+      h: Math.round(x / 90 * 92),
+      color: i === 9 ? 'var(--accent)' : 'var(--fill-strong)',
+      tip: names[i] + ' ' + Math.round(x * 1000).toLocaleString('cs-CZ') + ' Kč'
+    }));
+    return { theme: this.props.theme ?? 'light', months };
+  }
+}
+</script>
+</body>
+</html>

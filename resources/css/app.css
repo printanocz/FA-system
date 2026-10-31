@@ -1,0 +1,253 @@
+@import 'tailwindcss';
+
+/*
+ * Design systém „AF Fakturace“ (verze 1). Soubory v ./design jsou převzaté 1:1
+ * z artefaktu design systému a needitují se ručně: změny dělá řídicí chat.
+ * Pořadí: tokens.css → components/bundle.css (třídy af-*).
+ */
+@import './design/tokens.css' layer(base);
+@import './design/bundle.css' layer(components);
+
+@source '../views';
+@source '../js';
+
+/* Tmavý režim přes data-theme (stejně jako tokens.css). */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/*
+ * Mapování tokenů do Tailwindu. Hodnoty se nepíšou natvrdo, vše odkazuje na
+ * proměnné z tokens.css. `inline` = utility čtou var(--token) přímo, takže
+ * přepnutí data-theme funguje bez generování duplicitních proměnných.
+ */
+@theme inline {
+    /* Jen barvy z design systému (žádná výchozí paleta Tailwindu). */
+    --color-*: initial;
+    --color-transparent: transparent;
+    --color-current: currentColor;
+
+    --color-bg: var(--bg);
+    --color-surface: var(--surface);
+    --color-surface-2: var(--surface-2);
+    --color-fill: var(--fill);
+    --color-fill-strong: var(--fill-strong);
+    --color-separator: var(--separator);
+    --color-separator-strong: var(--separator-strong);
+    --color-label: var(--label);
+    --color-label-2: var(--label-2);
+    --color-label-3: var(--label-3);
+    --color-accent: var(--accent);
+    --color-on-accent: var(--on-accent);
+    --color-accent-text: var(--accent-text);
+    --color-accent-soft: var(--accent-soft);
+    --color-red: var(--red);
+    --color-red-soft: var(--red-soft);
+    --color-orange: var(--orange);
+    --color-orange-soft: var(--orange-soft);
+    --color-blue: var(--blue);
+    --color-blue-soft: var(--blue-soft);
+    --color-purple: var(--purple);
+    --color-purple-soft: var(--purple-soft);
+    --color-glass: var(--glass);
+    --color-glass-edge: var(--glass-edge);
+    --color-scrim: var(--scrim);
+    --color-focus-ring: var(--focus-ring);
+
+    /* Rozestupy: 1 jednotka = space-1 (4 px); space-11 = 44 px odpovídá 11 jednotkám. */
+    --spacing: var(--space-1);
+
+    --radius-*: initial;
+    --radius-xs: var(--radius-xs);
+    --radius-s: var(--radius-s);
+    --radius-m: var(--radius-m);
+    --radius-l: var(--radius-l);
+    --radius-xl: var(--radius-xl);
+    --radius-full: var(--radius-full);
+
+    --shadow-*: initial;
+    --shadow-glass: var(--shadow-glass);
+    --shadow-card: var(--shadow-card);
+    --shadow-thumb: var(--shadow-thumb);
+    --shadow-sheet: var(--shadow-sheet);
+
+    --blur-*: initial;
+    --blur-glass: var(--blur-glass);
+
+    /* Body zlomu z README design systému (mobil < 760, tablet 760–1023, desktop ≥ 1024).
+       Stejné hodnoty drží resources/js/lib/breakpoints.ts. */
+    --breakpoint-*: initial;
+    --breakpoint-tablet: 760px;
+    --breakpoint-desktop: 1024px;
+
+    --font-*: initial;
+    --font-ui: var(--font-ui);
+    --font-mono: var(--font-mono);
+}
+
+/*
+ * Řádky formuláře Nastavení (artboard „Nastavení — firma a doklady“): popisek vlevo,
+ * pole vpravo; pod 760 px se řádek skládá pod sebe. Navigace sekcí je sticky sloupec odkazů.
+ */
+@layer components {
+    .set-row {
+        display: grid;
+        grid-template-columns: 200px minmax(0, 1fr);
+        gap: 16px;
+        align-items: center;
+        padding: 10px 16px;
+        position: relative;
+    }
+    .set-row + .set-row::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 16px;
+        right: 0;
+        height: 1px;
+        background: var(--separator);
+    }
+    .set-row .af-input {
+        height: 36px;
+    }
+    .set-row textarea.af-input {
+        height: auto;
+    }
+    .set-label {
+        font-size: 14px;
+        color: var(--label);
+    }
+    .set-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .set-nav a {
+        display: flex;
+        align-items: center;
+        height: 34px;
+        padding: 0 12px;
+        border-radius: 10px;
+        font-size: 14px;
+        color: var(--label);
+        text-decoration: none;
+    }
+    .set-nav a[aria-current='true'] {
+        background: var(--fill-strong);
+        font-weight: 600;
+    }
+    .set-nav a:hover {
+        background: var(--fill);
+    }
+    @media (max-width: 759px) {
+        .set-row {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 6px;
+        }
+    }
+
+    /* Adresář: řádek seznamu kontaktů a avatar (artboard „Adresář“). */
+    .ct-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--label);
+    }
+    .ct-row:hover {
+        background: var(--fill);
+    }
+    .ct-row[aria-current='true'] {
+        background: var(--accent-soft);
+    }
+    .ct-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--fill-strong);
+        display: grid;
+        place-items: center;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--label-2);
+        flex: none;
+    }
+    /* Ceník: řádek seznamu na mobilu a tlačítko s názvem položky v tabulce. */
+    .pi-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 10px 12px;
+        border: 0;
+        border-radius: 12px;
+        background: transparent;
+        font: inherit;
+        color: var(--label);
+        cursor: pointer;
+    }
+    .pi-row:hover {
+        background: var(--fill);
+    }
+    .pi-name {
+        display: block;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        font: inherit;
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    /* Editor faktury: buňky tabulky položek. */
+    .ed-cell {
+        font: inherit;
+        font-size: 14px;
+        height: 36px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--label);
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .ed-cell:hover {
+        background: var(--fill);
+    }
+    .ed-cell:focus {
+        background: var(--surface);
+        outline: 2px solid var(--focus-ring);
+        outline-offset: 0;
+    }
+    .ed-cell[aria-invalid='true'] {
+        outline: 2px solid var(--red);
+        outline-offset: 0;
+    }
+    textarea.ed-text {
+        height: auto;
+        padding: 10px 12px;
+        line-height: 20px;
+        resize: vertical;
+    }
+}
+
+/* Detail faktury: osa průběhu (artboard „Detail faktury“). */
+@layer components {
+    .tl {
+        display: grid;
+        grid-template-columns: 12px 1fr;
+        gap: 4px 12px;
+    }
+    .tl__dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-top: 5px;
+        background: var(--fill-strong);
+    }
+    .tl__dot--done {
+        background: var(--accent-text);
+    }
+}

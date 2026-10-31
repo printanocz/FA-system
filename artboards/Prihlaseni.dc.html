@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Přihlášení</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/affakturace/tokens.css">
+<link rel="stylesheet" href="ds/affakturace/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--accent-text)}a:hover{color:var(--label)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="min-height: 900px; background: var(--bg); color: var(--label); font-family: var(--font-ui); padding: 64px 16px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 40px;">
+
+  <div style="display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; letter-spacing: -0.2px;">
+    <span class="af-sidebar__mark" style="width: 32px; height: 32px; border-radius: 10px; font-size: 13px;">AF</span>Splatno
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 32px; justify-content: center; align-items: flex-start; width: 100%;">
+
+    <section class="af-card" style="width: 400px; max-width: 100%; display: flex; flex-direction: column; gap: 20px; padding: 32px;" aria-labelledby="h-login">
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <h1 id="h-login" style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.2px;">Přihlášení</h1>
+        <p style="margin: 0; font-size: 14px; line-height: 19px; color: var(--label-2);">Fakturace Adama Fujáka</p>
+      </div>
+      <label class="af-field"><span class="af-field__label">E-mail</span><input class="af-input" id="l-email" type="email" value="jsem@adamfujak.cz" autocomplete="username"></label>
+      <label class="af-field"><span class="af-field__label">Heslo</span><input class="af-input af-input--error" id="l-pass" type="password" value="xxxxxxxxxxxx" autocomplete="current-password"><span class="af-field__error">Nesprávný e-mail nebo heslo.</span></label>
+      <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--label-2);"><span class="af-check" aria-checked="false"></span>Zapamatovat si mě na tomto zařízení</label>
+      <button class="af-btn af-btn--prominent af-btn--lg" style="width: 100%;">Přihlásit se</button>
+      <a class="af-btn af-btn--plain" href="#" style="align-self: center; text-decoration: none;">Zapomenuté heslo</a>
+    </section>
+
+    <section class="af-card" style="width: 400px; max-width: 100%; display: flex; flex-direction: column; gap: 20px; padding: 32px;" aria-labelledby="h-2fa">
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <h1 id="h-2fa" style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.2px;">Ověřovací kód</h1>
+        <p style="margin: 0; font-size: 14px; line-height: 19px; color: var(--label-2);">Zadejte 6místný kód z aplikace pro ověřování (např. Hesla na iPhonu nebo Google Authenticator).</p>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px;" role="group" aria-label="Ověřovací kód">
+        <input class="af-input" aria-label="Číslice 1" value="4" style="height: 52px; text-align: center; font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; padding: 0;">
+        <input class="af-input" aria-label="Číslice 2" value="8" style="height: 52px; text-align: center; font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; padding: 0;">
+        <input class="af-input" aria-label="Číslice 3" value="2" style="height: 52px; text-align: center; font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; padding: 0;">
+        <input class="af-input" aria-label="Číslice 4" value="" style="height: 52px; text-align: center; font-size: 22px; font-weight: 600; padding: 0; outline: 2px solid var(--focus-ring); background: var(--surface);">
+        <input class="af-input" aria-label="Číslice 5" value="" style="height: 52px; text-align: center; font-size: 22px; font-weight: 600; padding: 0;">
+        <input class="af-input" aria-label="Číslice 6" value="" style="height: 52px; text-align: center; font-size: 22px; font-weight: 600; padding: 0;">
+      </div>
+      <p style="margin: 0; font-size: 12px; line-height: 16px; color: var(--label-3);">Kód se ověří automaticky po zadání poslední číslice. Vložení celého kódu ze schránky funguje taky.</p>
+      <button class="af-btn af-btn--prominent af-btn--lg" style="width: 100%;" disabled>Ověřit</button>
+      <a class="af-btn af-btn--plain" href="#" style="align-self: center; text-decoration: none;">Použít záložní kód</a>
+    </section>
+  </div>
+
+  <p style="margin: 0; font-size: 12px; line-height: 16px; color: var(--label-3);">splatno.adamfujak.cz · přístup jen pro vlastníka</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Vzhled"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light' };
+  }
+}
+</script>
+</body>
+</html>
