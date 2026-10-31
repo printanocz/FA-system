@@ -105,7 +105,9 @@ final class DashboardQuery
         return Document::query()
             ->where('type', DocumentType::Invoice)
             ->whereIn('status', [...ContactStatistics::ISSUED_STATUSES])
-            ->whereBetween('issue_date', [$from, $this->today->toDateString()])
+            // whereDate: v SQLite se datum ukládá i s časem a prosté porovnání by vynechalo dnešek.
+            ->whereDate('issue_date', '>=', $from)
+            ->whereDate('issue_date', '<=', $this->today->toDateString())
             ->toBase()
             ->get(['issue_date', 'total'])
             ->map(fn (object $row): array => [
