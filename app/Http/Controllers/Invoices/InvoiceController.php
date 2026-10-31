@@ -11,12 +11,10 @@ use App\Domain\Documents\DocumentStatus;
 use App\Domain\Documents\DocumentType;
 use App\Domain\Documents\Exceptions\DocumentException;
 use App\Domain\Documents\PaymentMethod;
-use App\Domain\Mail\EmailSettings;
-use App\Domain\Mail\EmailTemplate;
+use App\Domain\Mail\EmailDraftBuilder;
 use App\Domain\Payments\Exceptions\InvalidPaymentDataException;
 use App\Domain\Payments\IbanConverter;
 use App\Domain\Payments\QrPaymentService;
-use App\Domain\Pdf\InvoicePdf;
 use App\Domain\Settings\DocumentSettings;
 use App\Http\Controllers\Controller;
 use App\Models\BankAccount;
@@ -154,7 +152,7 @@ class InvoiceController extends Controller
     }
 
     /** Detail faktury; koncept se místo detailu otevře v editoru. */
-    public function show(Document $invoice, ContactStatistics $statistics, EmailSettings $emailSettings, InvoicePdf $pdf): Response|RedirectResponse
+    public function show(Document $invoice, ContactStatistics $statistics, EmailDraftBuilder $emailDraft): Response|RedirectResponse
     {
         if (! $invoice->isLocked() && $invoice->status === DocumentStatus::Draft) {
             return redirect()->route('invoices.edit', $invoice);
@@ -235,7 +233,7 @@ class InvoiceController extends Controller
                 'stats' => $statistics->forContact($contact, $today)->toArray(),
             ],
             'related' => $this->related($invoice),
-            'email' => $this->emailDraft($invoice, $contact, $emailSettings, $pdf, $overdue),
+            'email' => $emailDraft->build($invoice, $contact, $overdue),
             'emails' => $invoice->emailLogs()->where('status', EmailLog::STATUS_SENT)->get()
                 ->map(fn (EmailLog $log): array => [
                     'id' => $log->id,
@@ -244,44 +242,6 @@ class InvoiceController extends Controller
                     'sent_at' => $log->sent_at?->toIso8601String(),
                 ])->values(),
         ]);
-    }
-
-    /**
-     * Předvyplněný e-mail pro Sheet „Odeslat e-mailem“: příjemce a kopie z kontaktu, předmět a text
-     * z šablon v Nastavení s dosazenými proměnnými (dají se před odesláním upravit).
-     *
-     * @return array<string, mixed>
-     */
-    private function emailDraft(Document $invoice, ?Contact $contact, EmailSettings $settings, InvoicePdf $pdf, bool $overdue): array
-    {
-        $templates = $settings->all();
-        $variables = EmailTemplate::variables($invoice);
-        $status = $invoice->status;
-        $sendable = $invoice->isLocked() && in_array($status, [
-            DocumentStatus::Issued, DocumentStatus::Sent, DocumentStatus::PartiallyPaid, DocumentStatus::Paid,
-        ], true);
-
-        return [
-            'can_send' => $sendable,
-            'can_remind' => $overdue && in_array($status, [DocumentStatus::Issued, DocumentStatus::Sent, DocumentStatus::PartiallyPaid], true),
-            'to' => $contact->email ?? '',
-            'cc' => array_values($contact->email_cc ?? []),
-            'copy_to_me' => (bool) $templates['copy_to_me'],
-            // Poslední upomínka z posledních 7 dní: Sheet na ni upozorní (jen informace).
-            'last_reminder_at' => $invoice->last_reminder_at !== null && $invoice->last_reminder_at->gt(Carbon::now()->subDays(7))
-                ? $invoice->last_reminder_at->toDateString()
-                : null,
-            'copy_address' => CompanyProfile::current()->email ?? '',
-            'attachment' => $pdf->filename($invoice),
-            'invoice' => [
-                'subject' => EmailTemplate::render((string) $templates['invoice_subject'], $variables),
-                'body' => EmailTemplate::render((string) $templates['invoice_body'], $variables),
-            ],
-            'reminder' => [
-                'subject' => EmailTemplate::render((string) $templates['reminder_subject'], $variables),
-                'body' => EmailTemplate::render((string) $templates['reminder_body'], $variables),
-            ],
-        ];
     }
 
     private function saveAndIssue(Document $invoice, IssueDocument $issue, bool $send = false): RedirectResponse

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Contacts\ContactAresController;
 use App\Http\Controllers\Contacts\ContactController;
 use App\Http\Controllers\Contacts\ContactLookupController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Invoices\InvoiceController;
 use App\Http\Controllers\Invoices\InvoiceEmailController;
 use App\Http\Controllers\Invoices\InvoiceListController;
@@ -19,7 +20,6 @@ use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\SetupController;
 use App\Http\Controllers\TwoFactorSetupController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 // Přihlášení, reset hesla a 2FA endpointy registruje Fortify (config/fortify.php).
 
@@ -36,7 +36,7 @@ Route::get('/nastaveni/dvoufazove-overeni', [TwoFactorSetupController::class, 's
 
 // Všechno ostatní jen pro přihlášené s potvrzeným 2FA.
 Route::middleware(['auth', 'two-factor.required'])->group(function () {
-    Route::get('/', fn () => Inertia::render('Dashboard'))->name('dashboard');
+    Route::get('/', DashboardController::class)->name('dashboard');
 
     Route::prefix('faktury')->name('invoices.')->group(function () {
         Route::get('/', [InvoiceListController::class, 'index'])->name('index');
@@ -51,6 +51,7 @@ Route::middleware(['auth', 'two-factor.required'])->group(function () {
         Route::post('{invoice}/vystavit', [InvoiceController::class, 'issue'])->name('issue')->whereNumber('invoice');
         Route::delete('{invoice}', [InvoiceController::class, 'destroy'])->name('destroy')->whereNumber('invoice');
         Route::get('{invoice}/pdf', [InvoicePdfController::class, 'show'])->name('pdf')->whereNumber('invoice');
+        Route::get('{invoice}/email-navrh', [InvoiceEmailController::class, 'draft'])->name('email-draft')->whereNumber('invoice');
         Route::post('{invoice}/odeslat', [InvoiceEmailController::class, 'store'])->name('email')->whereNumber('invoice');
         Route::post('{invoice}/kopie', [InvoiceController::class, 'copy'])->name('copy')->whereNumber('invoice');
         Route::post('{invoice}/uhrady', [InvoicePaymentController::class, 'store'])->name('payments.store')->whereNumber('invoice');
