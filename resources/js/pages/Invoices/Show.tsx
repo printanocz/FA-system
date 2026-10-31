@@ -1,8 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { ChevronRight, Download, Ellipsis, FileText, Plus, Send, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ConfirmSheet from '@/components/ConfirmSheet';
 import InvoicePreview from '@/components/invoices/InvoicePreview';
+import EmailSheet, { type EmailKind } from '@/components/invoices/EmailSheet';
 import PaymentSheet from '@/components/invoices/PaymentSheet';
 import Menu from '@/components/Menu';
 import Toolbar from '@/components/Toolbar';
@@ -63,12 +64,34 @@ function DueLine({ invoice }: { invoice: InvoiceDetail }) {
 }
 
 /** Po akci se obnoví i počet po splatnosti v Sidebaru a hlášky (sdílené props). */
-const AFTER_ACTION = ['invoice', 'contact', 'related', 'overdueInvoices', 'status', 'error'];
+const AFTER_ACTION = [
+    'invoice',
+    'contact',
+    'related',
+    'email',
+    'emails',
+    'overdueInvoices',
+    'status',
+    'error',
+];
 
-export default function InvoiceShow({ invoice, contact, related }: InvoiceShowProps) {
+export default function InvoiceShow({
+    invoice,
+    contact,
+    related,
+    email,
+    emails,
+}: InvoiceShowProps) {
     const isMobile = useMediaQuery(MOBILE_QUERY);
     const flash = useFlash();
     const [paying, setPaying] = useState(false);
+    const [emailKind, setEmailKind] = useState<EmailKind | null>(() =>
+        email.can_send &&
+        typeof window !== 'undefined' &&
+        new URLSearchParams(window.location.search).has('odeslat')
+            ? 'invoice'
+            : null,
+    );
     const [deleting, setDeleting] = useState(false);
     const [removePayment, setRemovePayment] = useState<InvoiceDetail['payments'][number] | null>(
         null,
@@ -93,27 +116,56 @@ export default function InvoiceShow({ invoice, contact, related }: InvoiceShowPr
         );
     };
 
-    const timeline: { label: string; detail: string; done: boolean }[] = [
+    // „Vystavit a odeslat“ přesměruje sem s ?odeslat=1: Sheet se otevře rovnou (viz stav výše),
+    // parametr z adresy zmizí, aby ho nenesl reload ani sdílený odkaz.
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (!params.has('odeslat')) return;
+
+        params.delete('odeslat');
+        const query = params.toString();
+        window.history.replaceState(
+            window.history.state,
+            '',
+            window.location.pathname + (query ? `?${query}` : ''),
+        );
+    }, []);
+
+    // Průběh: vystavení, odeslání a upomínky z email_log a splatnost, podle času.
+    const steps: { label: string; detail: string; done: boolean; at: number }[] = [
         {
             label: 'Vystaveno',
             detail: invoice.issued_at
                 ? formatDateTime(invoice.issued_at)
                 : formatDate(invoice.issue_date),
             done: true,
+            at: new Date(invoice.issued_at ?? `${invoice.issue_date}T00:00:00`).getTime(),
         },
     ];
-    if (invoice.sent_at) {
-        timeline.push({
+    for (const sent of emails) {
+        if (!sent.sent_at) continue;
+        steps.push({
+            label: sent.type === 'reminder' ? 'Upomínka odeslána' : 'Odesláno e-mailem',
+            detail: `${formatDateTime(sent.sent_at)} · ${sent.to}`,
+            done: true,
+            at: new Date(sent.sent_at).getTime(),
+        });
+    }
+    if (emails.length === 0 && invoice.sent_at) {
+        steps.push({
             label: 'Odesláno e-mailem',
             detail: formatDateTime(invoice.sent_at),
             done: true,
+            at: new Date(invoice.sent_at).getTime(),
         });
     }
-    timeline.push({
+    steps.push({
         label: 'Splatnost',
         detail: formatDate(invoice.due_date),
         done: diffDays(todayIso(), invoice.due_date) <= 0,
+        at: new Date(`${invoice.due_date}T00:00:00`).getTime(),
     });
+    const timeline = steps.sort((a, b) => a.at - b.at);
 
     return (
         <>
@@ -137,9 +189,10 @@ export default function InvoiceShow({ invoice, contact, related }: InvoiceShowPr
                     <button
                         type="button"
                         className="af-btn af-btn--icon"
-                        aria-label="Odeslat"
-                        title="Přijde s odesíláním"
-                        disabled
+                        aria-label="Odeslat e-mailem"
+                        title="Odeslat e-mailem"
+                        disabled={!email.can_send}
+                        onClick={() => setEmailKind('invoice')}
                     >
                         <Send strokeWidth={1.75} aria-hidden="true" />
                     </button>
@@ -147,6 +200,22 @@ export default function InvoiceShow({ invoice, contact, related }: InvoiceShowPr
                         label="Další akce"
                         className="af-btn af-btn--icon cursor-pointer"
                         items={[
+                            ...(email.can_send
+                                ? [
+                                      {
+                                          label: 'Odeslat e-mailem',
+                                          onSelect: () => setEmailKind('invoice'),
+                                      },
+                                  ]
+                                : []),
+                            ...(email.can_remind
+                                ? [
+                                      {
+                                          label: 'Upomenout',
+                                          onSelect: () => setEmailKind('reminder'),
+                                      },
+                                  ]
+                                : []),
                             {
                                 label: 'Kopírovat jako novou',
                                 onSelect: () => run('post', `/faktury/${invoice.id}/kopie`),
@@ -166,6 +235,15 @@ export default function InvoiceShow({ invoice, contact, related }: InvoiceShowPr
                         <Ellipsis strokeWidth={2} aria-hidden="true" />
                     </Menu>
                 </div>
+                {email.can_remind && !isMobile && (
+                    <button
+                        type="button"
+                        className="af-btn af-btn--tinted cursor-pointer"
+                        onClick={() => setEmailKind('reminder')}
+                    >
+                        Upomenout
+                    </button>
+                )}
                 {invoice.can_pay && (
                     <button
                         type="button"
@@ -411,6 +489,15 @@ export default function InvoiceShow({ invoice, contact, related }: InvoiceShowPr
                     </div>
                 </aside>
             </div>
+
+            <EmailSheet
+                open={emailKind !== null}
+                kind={emailKind ?? 'invoice'}
+                invoiceId={invoice.id}
+                draft={email}
+                onClose={() => setEmailKind(null)}
+                onDone={flash.handle}
+            />
 
             <PaymentSheet
                 open={paying}

@@ -20,6 +20,15 @@ export type DocumentValues = {
     text_after: string;
 };
 
+export type EmailValues = {
+    sender_name: string;
+    copy_to_me: boolean;
+    invoice_subject: string;
+    invoice_body: string;
+    reminder_subject: string;
+    reminder_body: string;
+};
+
 export type BankAccountData = {
     id: number;
     name: string;
@@ -52,6 +61,8 @@ export type AccountData = {
 export type SettingsPageProps = {
     company: CompanyValues;
     documents: DocumentValues;
+    emails: EmailValues;
+    emailVariables: Record<string, string>;
     bankAccounts: BankAccountData[];
     numberSeries: NumberSeriesData[];
     account: AccountData;
@@ -72,7 +83,7 @@ export const sections: SectionDef[] = [
     { id: 'ucty', label: 'Bankovní účty' },
     { id: 'rady', label: 'Číselné řady' },
     { id: 'doklady', label: 'Doklady a texty' },
-    { id: 'emaily', label: 'E-maily a upomínky', soon: true },
+    { id: 'emaily', label: 'E-maily a upomínky' },
     { id: 'vzhled', label: 'Vzhled', soon: true },
     { id: 'ucet', label: 'Účet a zabezpečení' },
     { id: 'zaloha', label: 'Záloha a export dat', soon: true },

@@ -43,8 +43,11 @@ export function InvoicePaper({ invoice }: { invoice: InvoiceDetail }) {
     return (
         <div
             data-theme="light"
-            className="text-label flex flex-col gap-7 bg-white text-[13px] leading-[18px]"
+            className="flex flex-col gap-7 text-[13px] leading-[18px]"
             style={{
+                backgroundColor: '#FFFFFF',
+                color: 'var(--label)',
+                colorScheme: 'light',
                 width: PAPER_WIDTH,
                 height: PAPER_HEIGHT,
                 boxSizing: 'border-box',
@@ -321,7 +324,7 @@ export default function InvoicePreview({ invoice }: { invoice: InvoiceDetail }) 
         <section aria-label="Náhled PDF" className="w-full min-w-0">
             <div
                 ref={frame}
-                className="overflow-hidden rounded-[14px] bg-white shadow-sheet"
+                className="shadow-card overflow-hidden rounded-[14px] bg-white ring-1 ring-black/10 dark:ring-white/15"
                 style={{ height: PAPER_HEIGHT * scale }}
             >
                 <div
