@@ -51,17 +51,12 @@ jobs:
         run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
 
       - name: Pest
-        run: |
-          rc=0
-          for i in $(seq 1 20); do
-            PEST_ITER=$i vendor/bin/pest --log-junit storage/logs/junit-$(printf %02d $i).xml >/dev/null 2>&1 || rc=1
-          done
-          exit $rc
+        run: vendor/bin/pest --log-junit storage/logs/junit.xml
 
       - name: Padlé testy jako anotace
         # Logy z Actions nejdou stáhnout, anotace přes API ano.
         if: failure()
-        run: php scripts/ci-junit-errors.php storage/logs/junit-*.xml
+        run: php scripts/ci-junit-errors.php storage/logs/junit.xml
 
       - name: Sample PDF
         # Ukázková faktura z pevných dat, ke kontrole vzhledu (artifact invoice-sample-pdf).

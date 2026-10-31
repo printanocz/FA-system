@@ -185,6 +185,8 @@ export type EmailDraft = {
     cc: string[];
     copy_to_me: boolean;
     copy_address: string;
+    /** Datum poslední upomínky, jen když byla do 7 dní (jinak null). */
+    last_reminder_at: string | null;
     attachment: string;
     invoice: { subject: string; body: string };
     reminder: { subject: string; body: string };

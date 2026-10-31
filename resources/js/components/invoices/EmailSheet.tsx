@@ -4,6 +4,7 @@ import type { FormEvent } from 'react';
 import Sheet from '@/components/Sheet';
 import TextField from '@/components/TextField';
 import { Toggle } from '@/components/settings/SettingsRow';
+import { formatDate } from '@/lib/format';
 import { parseAddresses } from '@/lib/emailTemplate';
 import type { EmailDraft } from '@/lib/invoices';
 
@@ -34,6 +35,7 @@ function EmailForm({ kind, invoiceId, draft, onClose, onDone }: Omit<EmailSheetP
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
+        if (f.processing) return;
         f.transform((data) => ({ ...data, cc: parseAddresses(data.cc) }));
         f.post(`/faktury/${invoiceId}/odeslat`, {
             preserveScroll: true,
@@ -58,6 +60,15 @@ function EmailForm({ kind, invoiceId, draft, onClose, onDone }: Omit<EmailSheetP
         <form onSubmit={submit} className="af-sheet min-h-0 overflow-y-auto overscroll-contain">
             <div className="af-sheet__grabber" aria-hidden="true" />
             <h2 className="af-sheet__title">{title}</h2>
+
+            {kind === 'reminder' && draft.last_reminder_at && (
+                <div
+                    role="status"
+                    className="bg-orange-soft text-orange rounded-[14px] px-4 py-3 text-[14px] leading-5"
+                >
+                    Poslední upomínka odešla {formatDate(draft.last_reminder_at)}. Odeslat znovu?
+                </div>
+            )}
 
             {errors.send && (
                 <div
