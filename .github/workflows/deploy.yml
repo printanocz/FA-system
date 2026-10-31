@@ -176,6 +176,18 @@ jobs:
               echo "set ftp:ssl-force true"
               echo "set ftp:ssl-protect-data true"
               echo "set ftp:ssl-allow true"
+              # Diagnostika: otisk a vydavatel certifikátu, který server skutečně vrací (pro zkopírování do FTP_CERT_SHA1).
+              diag_host="${FTP_HOST%%:*}"
+              diag_port=21
+              case "$FTP_HOST" in *:*) diag_port="${FTP_HOST##*:}" ;; esac
+              diag_cert="$(openssl s_client -starttls ftp -connect "$diag_host:$diag_port" -servername "$diag_host" </dev/null 2>/dev/null | openssl x509 -outform PEM 2>/dev/null || true)"
+              if [ -n "$diag_cert" ]; then
+                diag_fp="$(printf '%s\n' "$diag_cert" | openssl x509 -noout -fingerprint -sha1 | cut -d= -f2)"
+                diag_info="$(printf '%s\n' "$diag_cert" | openssl x509 -noout -subject -issuer | tr '\n' ' ')"
+                echo "::notice title=Certifikát FTP serveru::SHA-1 $diag_fp | $diag_info | FTP_CERT_SHA1 nastaven: $([ -n "$FTP_CERT_SHA1" ] && echo ano || echo ne)"
+              else
+                echo "::warning title=Certifikát FTP serveru se nepodařilo stáhnout::Zkontroluj FTP_HOST (host nebo host:port)."
+              fi
               if [ -n "$FTP_CERT_SHA1" ]; then
                 # Připnutý certifikát: stáhne se ze serveru a použije se jen tehdy, když jeho otisk přesně sedí.
                 # Jiný certifikát (i veřejně důvěryhodný) nasazení zastaví. Název v certifikátu se pak nekontroluje,
