@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Settings;
 
 use App\Actions\Settings\UpdateCompanyProfile;
 use App\Actions\Settings\UpdateDocumentSettings;
+use App\Actions\Settings\UpdateEmailSettings;
 use App\Domain\Documents\NumberSeriesService;
+use App\Domain\Mail\EmailSettings;
+use App\Domain\Mail\EmailTemplate;
 use App\Domain\Settings\DocumentSettings;
 use App\Http\Controllers\Controller;
 use App\Models\BankAccount;
@@ -22,7 +25,7 @@ use Inertia\Response;
 /** Stránka Nastavení (/nastaveni): firma a výchozí hodnoty dokladů se ukládají společně. */
 class SettingsController extends Controller
 {
-    public function show(Request $request, DocumentSettings $documents, NumberSeriesService $numbers): Response
+    public function show(Request $request, DocumentSettings $documents, NumberSeriesService $numbers, EmailSettings $emails): Response
     {
         $user = $request->user();
         assert($user instanceof User);
@@ -51,6 +54,8 @@ class SettingsController extends Controller
                 'text_before' => $values['text_before'] ?? '',
                 'text_after' => $values['text_after'] ?? '',
             ],
+            'emails' => $emails->all(),
+            'emailVariables' => EmailTemplate::VARIABLES,
             'bankAccounts' => BankAccount::query()->orderByDesc('is_default')->orderBy('id')->get()
                 ->map(fn (BankAccount $account): array => [
                     'id' => $account->id,
@@ -82,17 +87,20 @@ class SettingsController extends Controller
         ]);
     }
 
-    public function update(Request $request, UpdateCompanyProfile $company, UpdateDocumentSettings $documents): RedirectResponse
+    public function update(Request $request, UpdateCompanyProfile $company, UpdateDocumentSettings $documents, UpdateEmailSettings $emails): RedirectResponse
     {
         /** @var array<string, mixed> $companyInput */
         $companyInput = (array) $request->input('company', []);
         /** @var array<string, mixed> $documentInput */
         $documentInput = (array) $request->input('documents', []);
 
-        DB::transaction(function () use ($company, $documents, $companyInput, $documentInput): void {
+        /** @var array<string, mixed> $emailInput */
+        $emailInput = (array) $request->input('emails', []);
+
+        DB::transaction(function () use ($company, $documents, $emails, $companyInput, $documentInput, $emailInput): void {
             $errors = [];
 
-            foreach (['company' => fn () => $company($companyInput), 'documents' => fn () => $documents($documentInput)] as $prefix => $save) {
+            foreach (['company' => fn () => $company($companyInput), 'documents' => fn () => $documents($documentInput), 'emails' => fn () => $emails($emailInput)] as $prefix => $save) {
                 try {
                     $save();
                 } catch (ValidationException $e) {

@@ -6,6 +6,7 @@ import AccountSection from '@/components/settings/AccountSection';
 import BankAccountsSection from '@/components/settings/BankAccountsSection';
 import CompanySection from '@/components/settings/CompanySection';
 import DocumentsSection from '@/components/settings/DocumentsSection';
+import EmailsSection from '@/components/settings/EmailsSection';
 import NumberSeriesSection from '@/components/settings/NumberSeriesSection';
 import { GroupedNav, SideNav } from '@/components/settings/SettingsNav';
 import { useToast } from '@/components/Toast';
@@ -31,6 +32,8 @@ const asSection = (hash: string): SectionId | null =>
 export default function SettingsIndex({
     company,
     documents,
+    emails,
+    emailVariables,
     bankAccounts,
     numberSeries,
     account,
@@ -41,12 +44,14 @@ export default function SettingsIndex({
     const active = asSection(hash);
     const { show, toast } = useToast();
 
-    const form = useForm({ company, documents });
+    const form = useForm({ company, documents, emails });
     const ares = useHttp<{ ico: string }, AresResult>('post', '/nastaveni/ares', { ico: '' });
     const [spy, setSpy] = useState<SectionId>('firma');
 
     const changes =
-        countChanges(form.data.company, company) + countChanges(form.data.documents, documents);
+        countChanges(form.data.company, company) +
+        countChanges(form.data.documents, documents) +
+        countChanges(form.data.emails, emails);
     const dirty = changes > 0;
     const guard = useUnsavedGuard(dirty);
 
@@ -80,13 +85,17 @@ export default function SettingsIndex({
             preserveState: true,
             onSuccess: (page) => {
                 const fresh = page.props as unknown as SettingsPageProps;
-                form.setData({ company: fresh.company, documents: fresh.documents });
+                form.setData({
+                    company: fresh.company,
+                    documents: fresh.documents,
+                    emails: fresh.emails,
+                });
                 show('Uloženo');
             },
         });
 
     const discard = () => {
-        form.setData({ company, documents });
+        form.setData({ company, documents, emails });
         form.clearErrors();
         ares.clearErrors();
     };
@@ -103,7 +112,8 @@ export default function SettingsIndex({
     };
 
     const visible = (id: SectionId) => !isMobile || active === id;
-    const showActions = !isMobile || active === 'firma' || active === 'doklady' || dirty;
+    const showActions =
+        !isMobile || active === 'firma' || active === 'doklady' || active === 'emaily' || dirty;
     const activeLabel = sections.find((section) => section.id === active)?.label;
 
     return (
@@ -182,6 +192,17 @@ export default function SettingsIndex({
                                         ...form.data.documents,
                                         [field]: value,
                                     })
+                                }
+                                error={error}
+                            />
+                        )}
+                        {visible('emaily') && (
+                            <EmailsSection
+                                values={form.data.emails}
+                                variables={emailVariables}
+                                senderPlaceholder={form.data.company.name}
+                                onChange={(field, value) =>
+                                    form.setData('emails', { ...form.data.emails, [field]: value })
                                 }
                                 error={error}
                             />

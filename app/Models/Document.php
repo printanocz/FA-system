@@ -125,6 +125,12 @@ class Document extends Model
         return $this->hasMany(Payment::class)->orderBy('paid_at')->orderBy('id');
     }
 
+    /** @return HasMany<EmailLog, $this> */
+    public function emailLogs(): HasMany
+    {
+        return $this->hasMany(EmailLog::class)->orderBy('created_at')->orderBy('id');
+    }
+
     /** @return BelongsTo<Contact, $this> */
     public function contact(): BelongsTo
     {

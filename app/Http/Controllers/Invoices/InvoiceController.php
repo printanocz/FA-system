@@ -11,9 +11,12 @@ use App\Domain\Documents\DocumentStatus;
 use App\Domain\Documents\DocumentType;
 use App\Domain\Documents\Exceptions\DocumentException;
 use App\Domain\Documents\PaymentMethod;
+use App\Domain\Mail\EmailSettings;
+use App\Domain\Mail\EmailTemplate;
 use App\Domain\Payments\Exceptions\InvalidPaymentDataException;
 use App\Domain\Payments\IbanConverter;
 use App\Domain\Payments\QrPaymentService;
+use App\Domain\Pdf\InvoicePdf;
 use App\Domain\Settings\DocumentSettings;
 use App\Http\Controllers\Controller;
 use App\Models\BankAccount;
@@ -21,6 +24,7 @@ use App\Models\CompanyProfile;
 use App\Models\Contact;
 use App\Models\Document;
 use App\Models\DocumentItem;
+use App\Models\EmailLog;
 use App\Models\Payment;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
@@ -110,7 +114,7 @@ class InvoiceController extends Controller
     /** Vystaví nový koncept (uloží ho a rovnou vystaví). */
     public function issueNew(Request $request, SaveInvoiceDraft $save, IssueDocument $issue): RedirectResponse
     {
-        return $this->saveAndIssue($save($request->all()), $issue);
+        return $this->saveAndIssue($save($request->all()), $issue, $request->boolean('send'));
     }
 
     /** Vystaví existující koncept; přiložená data formuláře se předtím uloží. */
@@ -124,7 +128,7 @@ class InvoiceController extends Controller
             $invoice = $save($request->all(), $invoice);
         }
 
-        return $this->saveAndIssue($invoice, $issue);
+        return $this->saveAndIssue($invoice, $issue, $request->boolean('send'));
     }
 
     public function destroy(Document $invoice): RedirectResponse
@@ -150,7 +154,7 @@ class InvoiceController extends Controller
     }
 
     /** Detail faktury; koncept se místo detailu otevře v editoru. */
-    public function show(Document $invoice, ContactStatistics $statistics): Response|RedirectResponse
+    public function show(Document $invoice, ContactStatistics $statistics, EmailSettings $emailSettings, InvoicePdf $pdf): Response|RedirectResponse
     {
         if (! $invoice->isLocked() && $invoice->status === DocumentStatus::Draft) {
             return redirect()->route('invoices.edit', $invoice);
@@ -231,10 +235,52 @@ class InvoiceController extends Controller
                 'stats' => $statistics->forContact($contact, $today)->toArray(),
             ],
             'related' => $this->related($invoice),
+            'email' => $this->emailDraft($invoice, $contact, $emailSettings, $pdf, $overdue),
+            'emails' => $invoice->emailLogs()->where('status', EmailLog::STATUS_SENT)->get()
+                ->map(fn (EmailLog $log): array => [
+                    'id' => $log->id,
+                    'type' => $log->type,
+                    'to' => $log->to_address,
+                    'sent_at' => $log->sent_at?->toIso8601String(),
+                ])->values(),
         ]);
     }
 
-    private function saveAndIssue(Document $invoice, IssueDocument $issue): RedirectResponse
+    /**
+     * Předvyplněný e-mail pro Sheet „Odeslat e-mailem“: příjemce a kopie z kontaktu, předmět a text
+     * z šablon v Nastavení s dosazenými proměnnými (dají se před odesláním upravit).
+     *
+     * @return array<string, mixed>
+     */
+    private function emailDraft(Document $invoice, ?Contact $contact, EmailSettings $settings, InvoicePdf $pdf, bool $overdue): array
+    {
+        $templates = $settings->all();
+        $variables = EmailTemplate::variables($invoice);
+        $status = $invoice->status;
+        $sendable = $invoice->isLocked() && in_array($status, [
+            DocumentStatus::Issued, DocumentStatus::Sent, DocumentStatus::PartiallyPaid, DocumentStatus::Paid,
+        ], true);
+
+        return [
+            'can_send' => $sendable,
+            'can_remind' => $overdue && in_array($status, [DocumentStatus::Issued, DocumentStatus::Sent, DocumentStatus::PartiallyPaid], true),
+            'to' => $contact->email ?? '',
+            'cc' => array_values($contact->email_cc ?? []),
+            'copy_to_me' => (bool) $templates['copy_to_me'],
+            'copy_address' => CompanyProfile::current()?->email ?? '',
+            'attachment' => $pdf->filename($invoice),
+            'invoice' => [
+                'subject' => EmailTemplate::render((string) $templates['invoice_subject'], $variables),
+                'body' => EmailTemplate::render((string) $templates['invoice_body'], $variables),
+            ],
+            'reminder' => [
+                'subject' => EmailTemplate::render((string) $templates['reminder_subject'], $variables),
+                'body' => EmailTemplate::render((string) $templates['reminder_body'], $variables),
+            ],
+        ];
+    }
+
+    private function saveAndIssue(Document $invoice, IssueDocument $issue, bool $send = false): RedirectResponse
     {
         try {
             $invoice = $issue($invoice);
@@ -243,7 +289,8 @@ class InvoiceController extends Controller
             return redirect()->route('invoices.edit', $invoice)->with('error', IssueFailure::describe($e));
         }
 
-        return redirect()->route('invoices.show', $invoice)->with('status', 'Faktura vystavena');
+        // „Vystavit a odeslat“: detail se otevře rovnou se Sheetem pro odeslání.
+        return redirect()->route('invoices.show', $send ? [$invoice, 'odeslat' => 1] : [$invoice])->with('status', 'Faktura vystavena');
     }
 
     private function redirectIfNotEditable(Document $invoice): ?RedirectResponse

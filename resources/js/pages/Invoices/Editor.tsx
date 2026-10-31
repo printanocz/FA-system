@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { FileCheck } from 'lucide-react';
+import { FileCheck, Send } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ConfirmSheet from '@/components/ConfirmSheet';
 import CustomerSection from '@/components/invoice/CustomerSection';
@@ -100,7 +100,7 @@ function EditorForm({
             })),
     });
 
-    const submit = (kind: 'save' | 'issue') => {
+    const submit = (kind: 'save' | 'issue' | 'issue-send') => {
         if (f.processing) return;
         f.transform(prepare);
 
@@ -113,7 +113,8 @@ function EditorForm({
             },
         };
 
-        if (kind === 'issue') {
+        if (kind === 'issue' || kind === 'issue-send') {
+            if (kind === 'issue-send') f.transform((data) => ({ ...prepare(data), send: true }));
             f.post(document ? `${base}/vystavit` : '/faktury/vystavit', options);
         } else if (document) {
             f.put(base, { ...options, preserveState: true });
@@ -252,12 +253,21 @@ function EditorForm({
                 </button>
                 <button
                     type="button"
-                    className={`af-btn ${isMobile ? 'af-btn--tinted' : 'af-btn--prominent'}`}
+                    className="af-btn af-btn--tinted"
                     disabled={f.processing}
                     onClick={() => submit('issue')}
                 >
                     <FileCheck strokeWidth={1.75} aria-hidden="true" />
                     Vystavit
+                </button>
+                <button
+                    type="button"
+                    className={`af-btn ${isMobile ? 'af-btn--tinted' : 'af-btn--prominent'}`}
+                    disabled={f.processing}
+                    onClick={() => submit('issue-send')}
+                >
+                    <Send strokeWidth={1.75} aria-hidden="true" />
+                    Vystavit a odeslat
                 </button>
             </Toolbar>
 

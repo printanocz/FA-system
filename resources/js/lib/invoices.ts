@@ -177,7 +177,30 @@ export type RelatedDocument = {
     url: string | null;
 };
 
+/** Předvyplněný e-mail pro Sheet „Odeslat e-mailem“ (šablony s dosazenými proměnnými). */
+export type EmailDraft = {
+    can_send: boolean;
+    can_remind: boolean;
+    to: string;
+    cc: string[];
+    copy_to_me: boolean;
+    copy_address: string;
+    attachment: string;
+    invoice: { subject: string; body: string };
+    reminder: { subject: string; body: string };
+};
+
+/** Odeslaný e-mail z email_log (do Průběhu v detailu). */
+export type SentEmail = {
+    id: number;
+    type: 'invoice' | 'reminder';
+    to: string;
+    sent_at: string | null;
+};
+
 export type InvoiceShowProps = {
+    email: EmailDraft;
+    emails: SentEmail[];
     invoice: InvoiceDetail;
     contact: {
         id: number;
