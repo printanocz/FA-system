@@ -267,7 +267,7 @@ class InvoiceController extends Controller
             'to' => $contact->email ?? '',
             'cc' => array_values($contact->email_cc ?? []),
             'copy_to_me' => (bool) $templates['copy_to_me'],
-            'copy_address' => CompanyProfile::current()?->email ?? '',
+            'copy_address' => CompanyProfile::current()->email ?? '',
             'attachment' => $pdf->filename($invoice),
             'invoice' => [
                 'subject' => EmailTemplate::render((string) $templates['invoice_subject'], $variables),

@@ -45,7 +45,7 @@ final class SendInvoiceEmail
         $this->assertSendable($document, $type);
 
         $company = CompanyProfile::current();
-        $copyTo = $data['copy_to_me'] ? array_values(array_filter([$company?->email])) : [];
+        $copyTo = $data['copy_to_me'] ? array_filter([$company?->email]) : [];
         $cc = array_values(array_unique(array_map('strtolower', $data['cc'] ?? [])));
         $cc = array_values(array_diff($cc, [strtolower($data['to'])]));
 
@@ -64,8 +64,8 @@ final class SendInvoiceEmail
                 body: $data['body'],
                 senderName: $this->settings->senderName($company?->name),
                 replyToAddress: $company?->email ?: null,
-                cc: $cc,
-                bcc: $copyTo,
+                ccAddresses: $cc,
+                bccAddresses: $copyTo,
                 pdf: $this->pdf->contents($document),
                 pdfName: $this->pdf->filename($document),
             );

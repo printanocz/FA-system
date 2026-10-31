@@ -23,8 +23,8 @@ class InvoiceMail extends Mailable
         public readonly string $body,
         public readonly string $senderName,
         public readonly ?string $replyToAddress,
-        public readonly array $cc,
-        public readonly array $bcc,
+        public readonly array $ccAddresses,
+        public readonly array $bccAddresses,
         public readonly string $pdf,
         public readonly string $pdfName,
     ) {}
@@ -33,8 +33,8 @@ class InvoiceMail extends Mailable
     {
         return new Envelope(
             from: new Address((string) config('mail.from.address'), $this->senderName),
-            cc: $this->cc,
-            bcc: $this->bcc,
+            cc: $this->ccAddresses,
+            bcc: $this->bccAddresses,
             replyTo: $this->replyToAddress ? [new Address($this->replyToAddress, $this->senderName)] : [],
             subject: $this->mailSubject,
         );

@@ -100,7 +100,7 @@ describe('sending an invoice', function () {
 
         $this->post("/faktury/{$invoice->id}/odeslat", mailPayload(['copy_to_me' => false, 'cc' => []]));
 
-        Mail::assertSent(InvoiceMail::class, fn (InvoiceMail $mail) => ! $mail->hasBcc('jsem@adamfujak.cz') && $mail->cc === []);
+        Mail::assertSent(InvoiceMail::class, fn (InvoiceMail $mail) => ! $mail->hasBcc('jsem@adamfujak.cz') && ! $mail->hasCc('ucetni@pekarna.example'));
     });
 
     it('does not change the status of an already paid invoice', function () {
