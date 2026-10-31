@@ -3,6 +3,7 @@ import { ChevronLeft } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import ConfirmSheet from '@/components/ConfirmSheet';
 import AccountSection from '@/components/settings/AccountSection';
+import BackupSection from '@/components/settings/BackupSection';
 import BankAccountsSection from '@/components/settings/BankAccountsSection';
 import CompanySection from '@/components/settings/CompanySection';
 import DocumentsSection from '@/components/settings/DocumentsSection';
@@ -34,6 +35,7 @@ export default function SettingsIndex({
     documents,
     emails,
     emailVariables,
+    backup,
     bankAccounts,
     numberSeries,
     account,
@@ -207,6 +209,7 @@ export default function SettingsIndex({
                                 error={error}
                             />
                         )}
+                        {visible('zaloha') && <BackupSection backup={backup} onMessage={show} />}
                         {visible('ucet') && <AccountSection account={account} onSaved={show} />}
                     </div>
                 )}

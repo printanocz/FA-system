@@ -11,6 +11,7 @@ use App\Http\Controllers\Invoices\InvoicePdfController;
 use App\Http\Controllers\Invoices\InvoiceTotalsController;
 use App\Http\Controllers\PriceItems\PriceItemController;
 use App\Http\Controllers\Settings\AresController;
+use App\Http\Controllers\Settings\BackupController;
 use App\Http\Controllers\Settings\BankAccountController;
 use App\Http\Controllers\Settings\NumberSeriesController;
 use App\Http\Controllers\Settings\RecoveryCodesController;
@@ -83,6 +84,8 @@ Route::middleware(['auth', 'two-factor.required'])->group(function () {
         Route::get('/', [SettingsController::class, 'show'])->name('show');
         Route::put('/', [SettingsController::class, 'update'])->name('update');
         Route::post('ares', AresController::class)->name('ares');
+        Route::post('zaloha', [BackupController::class, 'run'])->name('backup.run');
+        Route::get('export', [BackupController::class, 'export'])->name('export');
 
         Route::post('ucty', [BankAccountController::class, 'store'])->name('bank-accounts.store');
         Route::put('ucty/{bankAccount}', [BankAccountController::class, 'update'])->name('bank-accounts.update');

@@ -58,11 +58,30 @@ export type AccountData = {
     twoFactor: boolean;
 };
 
+export type BackupEntry = {
+    id: number;
+    at: string;
+    status: 'ok' | 'failed';
+    filename: string | null;
+    size: number;
+    local: boolean;
+    remote: boolean;
+    error: string | null;
+};
+
+export type BackupData = {
+    key_set: boolean;
+    offsite: boolean;
+    last: BackupEntry | null;
+    recent: BackupEntry[];
+};
+
 export type SettingsPageProps = {
     company: CompanyValues;
     documents: DocumentValues;
     emails: EmailValues;
     emailVariables: Record<string, string>;
+    backup: BackupData;
     bankAccounts: BankAccountData[];
     numberSeries: NumberSeriesData[];
     account: AccountData;
@@ -86,7 +105,7 @@ export const sections: SectionDef[] = [
     { id: 'emaily', label: 'E-maily a upomínky' },
     { id: 'vzhled', label: 'Vzhled', soon: true },
     { id: 'ucet', label: 'Účet a zabezpečení' },
-    { id: 'zaloha', label: 'Záloha a export dat', soon: true },
+    { id: 'zaloha', label: 'Záloha a export dat' },
 ];
 
 /** Počet změněných polí oproti uloženým hodnotám. */

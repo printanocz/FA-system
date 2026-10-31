@@ -21,6 +21,10 @@ class CronController extends Controller
             404,
         );
 
+        // Záloha (a další úlohy) nesmí skončit uprostřed, když volající (cron služba) přeruší spojení nebo vyprší jeho timeout.
+        ignore_user_abort(true);
+        set_time_limit(0);
+
         Artisan::call('schedule:run');
 
         return response('ok', 200, ['Content-Type' => 'text/plain; charset=UTF-8']);

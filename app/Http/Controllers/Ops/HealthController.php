@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Ops;
 
+use App\Domain\Backup\BackupStatus;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,6 +34,7 @@ class HealthController extends Controller
             'db' => $database,
             'version' => $version === '' ? 'unknown' : $version,
             'maintenance' => app()->isDownForMaintenance(),
+            'backup_age_hours' => $database === 'ok' ? BackupStatus::ageHours() : null,
         ]);
     }
 }

@@ -33,13 +33,13 @@ describe('healthcheck', function () {
         $this->get('/_health', ['X-Health-Token' => ''])->assertNotFound();
     });
 
-    it('returns only the status, database, version and maintenance flag with the right token', function () {
+    it('returns only the status, database, version, maintenance flag and backup age with the right token', function () {
         config(['deploy.health_token' => 'secret-health-token']);
         file_put_contents($this->versionFile, "abc123def\n");
 
         $this->getJson('/_health', ['X-Health-Token' => 'secret-health-token'])
             ->assertOk()
-            ->assertExactJson(['app' => 'ok', 'db' => 'ok', 'version' => 'abc123def', 'maintenance' => false]);
+            ->assertExactJson(['app' => 'ok', 'db' => 'ok', 'version' => 'abc123def', 'maintenance' => false, 'backup_age_hours' => null]);
     });
 
     it('reports an unknown version before the first deployment', function () {
@@ -97,6 +97,15 @@ describe('cron endpoint', function () {
         config(['deploy.cron_token' => $token]);
 
         $this->get('/_cron/'.$token)->assertOk()->assertSee('ok');
+    });
+
+    it('lets the scheduler finish even when the caller disconnects', function () use ($token) {
+        config(['deploy.cron_token' => $token]);
+        ignore_user_abort(false);
+
+        $this->get('/_cron/'.$token)->assertOk();
+
+        expect((bool) ignore_user_abort())->toBeTrue();
     });
 
     it('works during maintenance, so the post-deploy can finish', function () use ($token) {

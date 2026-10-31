@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domain\Backup\RetentionPolicy;
 use App\Domain\Documents\DocumentType;
 use App\Models\Document;
 use Illuminate\Support\Facades\Route;
@@ -14,7 +15,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(RetentionPolicy::class, fn (): RetentionPolicy => RetentionPolicy::fromConfig());
     }
 
     /**
