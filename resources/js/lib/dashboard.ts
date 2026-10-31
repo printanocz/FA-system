@@ -1,4 +1,4 @@
-import { formatDate, formatMoney } from '@/lib/format';
+import { formatDate, formatMoney, plural } from '@/lib/format';
 
 export type DashboardPeriod = 'mesic' | 'kvartal' | 'rok';
 
@@ -9,7 +9,12 @@ export type BilledCard = {
     change: number | null;
     from: string;
     to: string;
+    previous_year: number;
+    /** Faktury v jiné měně než CZK, které se do částky nezapočetly. */
+    foreign: ForeignCount[];
 };
+
+export type ForeignCount = { currency: string; count: number };
 
 export type OverdueRow = {
     id: number;
@@ -42,6 +47,7 @@ export type RecentInvoice = {
     computed_status: string | null;
     overdue_days: number | null;
     contact: string | null;
+    description: string | null;
     issue_date: string | null;
     due_date: string | null;
     total: string;
@@ -61,8 +67,9 @@ export type DashboardProps =
                   amount: string;
                   count: number;
                   nearest_due: { date: string; days: number } | null;
+                  foreign: ForeignCount[];
               };
-              overdue: { amount: string; count: number };
+              overdue: { amount: string; count: number; foreign: ForeignCount[] };
           };
           chart: {
               year: number;
@@ -108,19 +115,22 @@ export const MONTHS_IN = [
 ] as const;
 
 export const MONTHS_SHORT = [
-    'led',
-    'úno',
-    'bře',
-    'dub',
-    'kvě',
-    'čvn',
-    'čvc',
-    'srp',
-    'zář',
-    'říj',
-    'lis',
-    'pro',
+    'Led',
+    'Úno',
+    'Bře',
+    'Dub',
+    'Kvě',
+    'Čvn',
+    'Čvc',
+    'Srp',
+    'Zář',
+    'Říj',
+    'Lis',
+    'Pro',
 ] as const;
+
+/** „lednu“, „únoru“ … (pro „oproti říjnu 2025“). */
+export const MONTHS_TO = MONTHS_IN.map((name) => name.replace(/^v(e)? /, ''));
 
 /** Nadpis karty Fakturováno podle období: „za rok 2026“, „v říjnu“, „ve 4. čtvrtletí“. */
 export function billedTitle(period: DashboardPeriod, today: string): string {
@@ -134,6 +144,81 @@ export function billedTitle(period: DashboardPeriod, today: string): string {
         default:
             return `Fakturováno za rok ${year}`;
     }
+}
+
+/** Popisek první karty na mobilu podle segmentu: „Říjen“, „Q4 2026“, „Rok 2026“. */
+export function compactBilledLabel(period: DashboardPeriod, today: string): string {
+    const [year, month] = today.split('-').map(Number);
+    if (period === 'mesic') return capitalize(MONTHS[month - 1]);
+    if (period === 'kvartal') return `Q${Math.ceil(month / 3)} ${year}`;
+
+    return `Rok ${year}`;
+}
+
+/** Odkud se bere srovnání: „stejné období 2025“ (desktop), „2025“ / „říjnu 2025“ / „Q4 2025“ (mobil). */
+export function previousLabel(period: DashboardPeriod, today: string, compact: boolean): string {
+    const [year, month] = today.split('-').map(Number);
+    const previous = year - 1;
+    if (period === 'mesic') return `${MONTHS_TO[month - 1]} ${previous}`;
+    if (!compact) return `stejnému období ${previous}`;
+    if (period === 'kvartal') return `Q${Math.ceil(month / 3)} ${previous}`;
+
+    return String(previous);
+}
+
+export function capitalize(text: string): string {
+    return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/** „+ 2 faktury v EUR nejsou započteny“ (více měn: „+ 2 faktury v EUR, 1 faktura v USD nejsou započteny“). */
+export function foreignNote(foreign: ForeignCount[]): string | null {
+    if (foreign.length === 0) return null;
+    const total = foreign.reduce((sum, item) => sum + item.count, 0);
+    const parts = foreign.map(
+        (item) =>
+            `${item.count} ${plural(item.count, 'faktura', 'faktury', 'faktur')} v ${item.currency}`,
+    );
+
+    return `+ ${parts.join(', ')} ${total === 1 ? 'není započtena' : 'nejsou započteny'}`;
+}
+
+/** Částka rozdělená na číslo a měnu pro `af-kpi__value` („610 300“ + <small>Kč</small>). */
+export function moneyParts(
+    amount: string | number,
+    currency = 'CZK',
+): { value: string; unit: string } {
+    const text = formatMoney(amount, currency);
+    const index = text.search(/\s\S+$/);
+
+    return index === -1
+        ? { value: text, unit: '' }
+        : { value: text.slice(0, index), unit: text.slice(index + 1) };
+}
+
+/** Věta pod grafem: nejsilnější měsíc a které měsíce se ještě doplní. */
+export function chartInsight(
+    strongest: { month: number; amount: string } | null,
+    currentMonth: number,
+): string {
+    const parts: string[] = [];
+    parts.push(
+        strongest
+            ? `Nejsilnější měsíc ${MONTHS[strongest.month - 1]}, ${formatMoney(strongest.amount)}.`
+            : 'Letos zatím nemáte žádnou vyfakturovanou částku.',
+    );
+
+    const future = MONTHS.slice(currentMonth);
+    if (future.length === 1)
+        parts.push(`${capitalize(future[0])} se doplní podle vystavených faktur.`);
+    if (future.length === 2)
+        parts.push(`${capitalize(future[0])} a ${future[1]} se doplní podle vystavených faktur.`);
+    if (future.length > 2) {
+        parts.push(
+            `${capitalize(future[0])} až ${future[future.length - 1]} se doplní podle vystavených faktur.`,
+        );
+    }
+
+    return parts.join(' ');
 }
 
 /** „+12 %“, „−8 %“ (skutečné minus), „0 %“. */

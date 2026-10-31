@@ -1,20 +1,20 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { FileText, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
-import KpiCards from '@/components/dashboard/KpiCards';
+import { KpiCards, KpiCardsCompact } from '@/components/dashboard/KpiCards';
+import MobileChart from '@/components/dashboard/MobileChart';
 import MonthlyChart from '@/components/dashboard/MonthlyChart';
-import OverdueList from '@/components/dashboard/OverdueList';
+import { OverdueCard, OverdueList } from '@/components/dashboard/OverdueCard';
 import RecentInvoices from '@/components/dashboard/RecentInvoices';
-import VatLimitCard from '@/components/dashboard/VatLimitCard';
+import { VatCard, VatList } from '@/components/dashboard/VatLimit';
 import EmailSheet from '@/components/invoices/EmailSheet';
 import Toolbar from '@/components/Toolbar';
 import { useFlash } from '@/hooks/useFlash';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { MOBILE_QUERY } from '@/lib/breakpoints';
 import type { DashboardPeriod, DashboardProps, OverdueRow } from '@/lib/dashboard';
-import { MONTHS } from '@/lib/dashboard';
+import { chartInsight } from '@/lib/dashboard';
 import { formatToday } from '@/lib/date';
-import { formatMoney } from '@/lib/format';
 import type { EmailDraft } from '@/lib/invoices';
 
 /** Přehled: karty, graf, limit DPH, faktury po splatnosti a poslední doklady. */
@@ -85,7 +85,7 @@ export default function Dashboard(props: DashboardProps) {
 
                 <label className="af-search max-tablet:hidden w-60 max-w-full">
                     <Search strokeWidth={1.75} aria-hidden="true" />
-                    <input type="search" placeholder="Hledat doklad nebo klienta" />
+                    <input type="search" placeholder="Hledat" />
                     <kbd>⌘K</kbd>
                 </label>
                 <button
@@ -137,51 +137,112 @@ export default function Dashboard(props: DashboardProps) {
                         Jakmile vystavíte první fakturu, objeví se tu obrat, neuhrazené faktury a
                         sledování limitu pro DPH.
                     </p>
-                    <Link href="/faktury/nova" className="af-btn af-btn--prominent no-underline">
+                    <Link
+                        href="/faktury/nova"
+                        className={`af-btn ${isMobile ? 'af-btn--tinted' : 'af-btn--prominent'} no-underline`}
+                    >
                         <Plus strokeWidth={2} aria-hidden="true" />
                         Vystavit první fakturu
                     </Link>
                 </div>
             ) : (
-                <div className="flex flex-col gap-6">
-                    <KpiCards
-                        period={props.period}
-                        today={props.today}
-                        billed={props.cards.billed}
-                        month={props.cards.month}
-                        unpaid={props.cards.unpaid}
-                        overdue={props.cards.overdue}
-                        overdueList={props.overdue_list}
-                    />
+                <>
+                    {(() => {
+                        const overdueTotal = props.cards.overdue.count;
+                        const first = props.overdue_list[0];
+                        const kpi = {
+                            period: props.period,
+                            today: props.today,
+                            billed: props.cards.billed,
+                            month: props.cards.month,
+                            unpaid: props.cards.unpaid,
+                            overdue: props.cards.overdue,
+                            single:
+                                overdueTotal === 1 && first
+                                    ? { contact: first.contact, days: first.overdue_days }
+                                    : null,
+                        };
+                        const currentMonth = Number(props.today.slice(5, 7));
+                        const overdueProps = {
+                            rows: props.overdue_list,
+                            total: overdueTotal,
+                            loadingId,
+                            onRemind: remind,
+                        };
 
-                    <div className="desktop:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] grid grid-cols-1 gap-4">
-                        <article className="af-card flex flex-col gap-3">
-                            <h2 className="af-card__title">Fakturace po měsících</h2>
-                            <MonthlyChart
-                                year={props.chart.year}
-                                previousYear={props.chart.previous_year}
-                                months={props.chart.months}
-                                strongest={props.chart.strongest}
-                            />
-                            <p className="text-label-2 m-0 text-[13px] leading-[18px]">
-                                {props.chart.strongest
-                                    ? `Nejsilnější měsíc letos je ${MONTHS[props.chart.strongest.month - 1]}: ${formatMoney(props.chart.strongest.amount)}. Celkem letos ${formatMoney(props.chart.total)}.`
-                                    : 'Letos zatím nemáte žádnou vyfakturovanou částku.'}
-                            </p>
-                        </article>
-                        <VatLimitCard vat={props.vat} />
-                    </div>
+                        return isMobile ? (
+                            <div className="flex flex-col gap-4">
+                                <KpiCardsCompact {...kpi} />
 
-                    <div className="desktop:grid-cols-2 grid grid-cols-1 items-start gap-6">
-                        <OverdueList
-                            rows={props.overdue_list}
-                            total={props.cards.overdue.count}
-                            loadingId={loadingId}
-                            onRemind={remind}
-                        />
-                        <RecentInvoices rows={props.recent} />
-                    </div>
-                </div>
+                                <section
+                                    className="af-card flex flex-col gap-3 !p-4"
+                                    aria-labelledby="m-chart"
+                                >
+                                    <div className="flex items-baseline justify-between">
+                                        <h2
+                                            id="m-chart"
+                                            className="m-0 text-[15px] leading-5 font-semibold"
+                                        >
+                                            Fakturace po měsících
+                                        </h2>
+                                        <span className="text-label-3 text-xs">tis. Kč</span>
+                                    </div>
+                                    <MobileChart
+                                        year={props.chart.year}
+                                        previousYear={props.chart.previous_year}
+                                        months={props.chart.months}
+                                        currentMonth={currentMonth}
+                                        strongest={props.chart.strongest}
+                                    />
+                                </section>
+
+                                <OverdueList {...overdueProps} />
+                                <VatList vat={props.vat} />
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-6">
+                                <KpiCards {...kpi} />
+
+                                <section className="flex flex-wrap items-stretch gap-4">
+                                    <div className="af-card flex min-w-0 flex-[999_1_520px] flex-col gap-5">
+                                        <div className="flex flex-wrap items-baseline justify-between gap-3">
+                                            <h2 className="m-0 text-[22px] leading-7 font-bold tracking-[-0.2px]">
+                                                Fakturace po měsících
+                                            </h2>
+                                            <div className="text-label-2 flex gap-4 text-[13px]">
+                                                <span className="inline-flex items-center gap-1.5">
+                                                    <span className="bg-accent size-2.5 rounded-[3px]" />
+                                                    {props.chart.year}
+                                                </span>
+                                                <span className="inline-flex items-center gap-1.5">
+                                                    <span className="bg-fill-strong size-2.5 rounded-[3px]" />
+                                                    {props.chart.previous_year}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <MonthlyChart
+                                            year={props.chart.year}
+                                            previousYear={props.chart.previous_year}
+                                            months={props.chart.months}
+                                            strongest={props.chart.strongest}
+                                        />
+                                        <p className="text-label-2 m-0 text-[13px] leading-[18px]">
+                                            {chartInsight(props.chart.strongest, currentMonth)}
+                                        </p>
+                                    </div>
+
+                                    <div className="flex min-w-0 flex-[1_1_300px] flex-col gap-4">
+                                        <VatCard vat={props.vat} />
+                                        <OverdueCard {...overdueProps} />
+                                        {/* „Nabídky v jednání“: skryté, dokud nejsou nabídky (T-15). */}
+                                    </div>
+                                </section>
+
+                                <RecentInvoices rows={props.recent} />
+                            </div>
+                        );
+                    })()}
+                </>
             )}
 
             {flash.toast}

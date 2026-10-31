@@ -6,6 +6,7 @@ use App\Domain\Documents\DocumentType;
 use App\Models\CompanyProfile;
 use App\Models\Contact;
 use App\Models\Document;
+use App\Models\DocumentItem;
 use Brick\Math\BigDecimal;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -222,7 +223,7 @@ describe('unpaid and overdue', function () {
         expect(dashboard('2026-10-31')['cards']['unpaid']['nearest_due'])->toBeNull();
     });
 
-    it('lists the overdue invoices, longest overdue first, at most five', function () {
+    it('lists the overdue invoices, longest overdue first, at most three', function () {
         foreach (range(1, 7) as $i) {
             dashInvoice('2026-08-0'.$i, (string) ($i * 1000), ['due_date' => '2026-09-0'.$i, 'buyer_snapshot' => ['name' => "Klient {$i}"]]);
         }
@@ -230,9 +231,9 @@ describe('unpaid and overdue', function () {
         $data = dashboard('2026-10-31');
 
         expect($data['cards']['overdue'])->toMatchArray(['amount' => '28000.00', 'count' => 7])
-            ->and($data['overdue_list'])->toHaveCount(5)
+            ->and($data['overdue_list'])->toHaveCount(3)
             ->and($data['overdue_list'][0])->toMatchArray(['contact' => 'Klient 1', 'overdue_days' => 60, 'remaining' => '1000.00', 'due_date' => '2026-09-01'])
-            ->and(collect($data['overdue_list'])->pluck('contact')->all())->toBe(['Klient 1', 'Klient 2', 'Klient 3', 'Klient 4', 'Klient 5']);
+            ->and(collect($data['overdue_list'])->pluck('contact')->all())->toBe(['Klient 1', 'Klient 2', 'Klient 3']);
     });
 
     it('uses the remaining amount of a partially paid overdue invoice', function () {
@@ -242,6 +243,46 @@ describe('unpaid and overdue', function () {
 
         expect($data['cards']['overdue'])->toMatchArray(['amount' => '7500.00', 'count' => 1])
             ->and($data['overdue_list'][0]['remaining'])->toBe('7500.00');
+    });
+});
+
+describe('currencies', function () {
+    it('leaves foreign currency invoices out of every sum and notes them', function () {
+        dashInvoice('2026-10-02', '1000');
+        dashInvoice('2026-10-03', '50000', ['currency' => 'EUR']);
+        dashInvoice('2026-10-04', '70000', ['currency' => 'EUR']);
+        dashInvoice('2026-10-05', '9000', ['currency' => 'USD']);
+        dashInvoice('2025-10-05', '400', ['currency' => 'EUR']);
+
+        $data = dashboard('2026-10-31');
+
+        expect($data['cards']['billed'])->toMatchArray(['amount' => '1000.00', 'previous' => '0.00', 'change' => null])
+            ->and($data['cards']['billed']['foreign'])->toBe([['currency' => 'EUR', 'count' => 2], ['currency' => 'USD', 'count' => 1]])
+            ->and($data['cards']['month']['foreign'])->toBe([['currency' => 'EUR', 'count' => 2], ['currency' => 'USD', 'count' => 1]])
+            ->and($data['vat']['turnover'])->toBe('1000.00')
+            ->and($data['chart']['total'])->toBe('1000.00')
+            ->and(collect($data['chart']['months'])->firstWhere('month', 10)['current'])->toBe('1000.00');
+    });
+
+    it('has no foreign note when everything is in CZK', function () {
+        dashInvoice('2026-10-02', '1000');
+
+        expect(dashboard('2026-10-31')['cards']['billed']['foreign'])->toBe([]);
+    });
+
+    it('counts only CZK in unpaid and overdue and notes the rest', function () {
+        dashInvoice('2026-09-01', '1000', ['due_date' => '2026-09-15']);
+        dashInvoice('2026-09-01', '99000', ['due_date' => '2026-09-15', 'currency' => 'EUR']);
+        dashInvoice('2026-10-20', '5000', ['due_date' => '2026-11-10', 'currency' => 'EUR']);
+
+        $data = dashboard('2026-10-31');
+
+        expect($data['cards']['unpaid'])->toMatchArray(['amount' => '1000.00', 'count' => 1])
+            ->and($data['cards']['unpaid']['foreign'])->toBe([['currency' => 'EUR', 'count' => 2]])
+            ->and($data['cards']['overdue'])->toMatchArray(['amount' => '1000.00', 'count' => 1])
+            ->and($data['cards']['overdue']['foreign'])->toBe([['currency' => 'EUR', 'count' => 1]])
+            ->and($data['overdue_list'])->toHaveCount(1)
+            ->and($data['cards']['unpaid']['nearest_due'])->toBeNull();
     });
 });
 
@@ -318,6 +359,41 @@ describe('VAT registration limit', function () {
     });
 });
 
+describe('VAT turnover by taxable date', function () {
+    it('counts an invoice by its taxable date, not by the issue date', function () {
+        // Vystaveno loni, zdanitelné plnění letos: do limitu letošního roku patří, do karet loňska také (podle vystavení).
+        dashInvoice('2025-12-30', '300000', ['taxable_date' => '2026-01-02']);
+        // Vystaveno letos, zdanitelné plnění loni: do limitu nepatří, do karet letos ano.
+        dashInvoice('2026-01-03', '200000', ['taxable_date' => '2025-12-30']);
+        // Bez data plnění platí datum vystavení.
+        dashInvoice('2026-02-01', '1000');
+
+        $data = dashboard('2026-10-31');
+
+        expect($data['vat']['turnover'])->toBe('301000.00')
+            ->and($data['cards']['billed']['amount'])->toBe('201000.00')
+            ->and($data['cards']['billed']['previous'])->toBe('0.00')
+            ->and($data['chart']['total'])->toBe('201000.00');
+    });
+
+    it('ignores taxable dates in other years and counts a later date in the same year', function () {
+        dashInvoice('2026-03-01', '5000', ['taxable_date' => '2026-12-15']);
+        dashInvoice('2026-03-02', '7000', ['taxable_date' => '2027-01-05']);
+
+        expect(dashboard('2026-10-31')['vat']['turnover'])->toBe('5000.00');
+    });
+
+    it('does not let an invoice issued in the future leak into the cards', function () {
+        dashInvoice('2026-11-20', '9000', ['taxable_date' => '2026-10-20']);
+
+        $data = dashboard('2026-10-31');
+
+        expect($data['vat']['turnover'])->toBe('9000.00')
+            ->and($data['cards']['billed']['amount'])->toBe('0.00')
+            ->and($data['chart']['total'])->toBe('0.00');
+    });
+});
+
 describe('recent documents', function () {
     it('lists the five latest issued invoices with the list formats', function () {
         foreach (range(1, 6) as $i) {
@@ -329,8 +405,21 @@ describe('recent documents', function () {
         $recent = dashboard('2026-10-31')['recent'];
 
         expect($recent)->toHaveCount(5)
+            ->and($recent[0])->toHaveKey('description')
             ->and(collect($recent)->pluck('contact')->all())->toBe(['Odběratel 6', 'Odběratel 5', 'Odběratel 4', 'Odběratel 3', 'Odběratel 2'])
             ->and($recent[0])->toHaveKeys(['id', 'number', 'status', 'computed_status', 'overdue_days', 'contact', 'issue_date', 'due_date', 'total', 'currency']);
+    });
+
+    it('uses the name of the first item as the description', function () {
+        $invoice = dashInvoice('2026-10-01', '3000');
+        DocumentItem::factory()->create(['document_id' => $invoice->id, 'position' => 2, 'name' => 'Druhá položka']);
+        DocumentItem::factory()->create(['document_id' => $invoice->id, 'position' => 1, 'name' => 'Návrh obalů, 3 varianty']);
+        dashInvoice('2026-09-01', '100');
+
+        $recent = dashboard('2026-10-31')['recent'];
+
+        expect($recent[0]['description'])->toBe('Návrh obalů, 3 varianty')
+            ->and($recent[1]['description'])->toBeNull();
     });
 
     it('marks an overdue invoice with the days overdue', function () {

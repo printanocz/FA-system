@@ -1,57 +1,78 @@
 import { Link } from '@inertiajs/react';
-import { documentBadge } from '@/lib/documents';
 import type { RecentInvoice } from '@/lib/dashboard';
-import { formatDate, formatMoney } from '@/lib/format';
+import { documentBadge } from '@/lib/documents';
+import { formatDate, formatPrice } from '@/lib/format';
 
-/** Posledních pět faktur: stejné štítky stavu a formáty jako v seznamu faktur. */
+/** Poslední doklady (jen desktop a tablet): `af-card` přes celou šířku s `af-table`, stejné štítky jako v seznamu faktur. */
 export default function RecentInvoices({ rows }: { rows: RecentInvoice[] }) {
     return (
-        <section aria-labelledby="recent-title" className="flex flex-col gap-2">
-            <div className="af-list-header !p-0 flex items-baseline justify-between">
-                <h2 id="recent-title" className="m-0 text-[13px] leading-[18px] font-normal">
+        <section className="af-card flex flex-col !p-2" aria-labelledby="recent-title">
+            <div className="flex items-center justify-between px-4 pt-3.5 pb-1.5">
+                <h2
+                    id="recent-title"
+                    className="m-0 text-[22px] leading-7 font-bold tracking-[-0.2px]"
+                >
                     Poslední doklady
                 </h2>
-                <Link href="/faktury" className="text-accent-text no-underline">
+                <Link href="/faktury" className="af-btn af-btn--plain no-underline">
                     Všechny faktury
                 </Link>
             </div>
-            <div className="af-list">
-                {rows.map((row) => {
-                    const badge = documentBadge(row.status, row.computed_status, row.overdue_days);
-                    // Na mobilu stejně jako v seznamu: stručný štítek bez počtu dní.
-                    const short = documentBadge(row.status, row.computed_status);
+            <div className="af-table-wrap">
+                <table className="af-table">
+                    <thead>
+                        <tr>
+                            <th>Číslo</th>
+                            <th>Odběratel</th>
+                            <th>Vystaveno</th>
+                            <th>Splatnost</th>
+                            <th className="is-num">Částka</th>
+                            <th>Stav</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {rows.map((row) => {
+                            const badge = documentBadge(
+                                row.status,
+                                row.computed_status,
+                                row.overdue_days,
+                            );
 
-                    return (
-                        <Link
-                            key={row.id}
-                            href={`/faktury/${row.id}`}
-                            className="af-list__row text-label items-center gap-3 no-underline"
-                        >
-                            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                                <span className="truncate font-semibold">{row.contact ?? '—'}</span>
-                                <span className="text-label-3 text-xs leading-4">
-                                    <span className="af-mono !text-xs">{row.number ?? '—'}</span>
-                                    {row.issue_date && <> · {formatDate(row.issue_date, false)}</>}
-                                </span>
-                            </div>
-                            <div className="flex shrink-0 flex-col items-end gap-0.5">
-                                <span className="font-semibold tabular-nums">
-                                    {formatMoney(row.total, row.currency)}
-                                </span>
-                                <span
-                                    className={`${badge.className} max-tablet:hidden whitespace-nowrap`}
-                                >
-                                    {badge.label}
-                                </span>
-                                <span
-                                    className={`${short.className} tablet:hidden whitespace-nowrap`}
-                                >
-                                    {short.label}
-                                </span>
-                            </div>
-                        </Link>
-                    );
-                })}
+                            return (
+                                <tr key={row.id}>
+                                    <td>
+                                        <Link
+                                            href={`/faktury/${row.id}`}
+                                            className="af-mono text-label no-underline"
+                                        >
+                                            {row.number ?? '—'}
+                                        </Link>
+                                    </td>
+                                    <td>
+                                        <div className="af-cell-main">{row.contact ?? '—'}</div>
+                                        {row.description && (
+                                            <div className="af-cell-sub">{row.description}</div>
+                                        )}
+                                    </td>
+                                    <td>{row.issue_date ? formatDate(row.issue_date) : '—'}</td>
+                                    <td
+                                        className={
+                                            row.computed_status === 'overdue' ? 'is-overdue' : ''
+                                        }
+                                    >
+                                        {row.due_date ? formatDate(row.due_date) : '—'}
+                                    </td>
+                                    <td className="is-num">
+                                        {formatPrice(row.total, row.currency)}
+                                    </td>
+                                    <td>
+                                        <span className={badge.className}>{badge.label}</span>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
             </div>
         </section>
     );

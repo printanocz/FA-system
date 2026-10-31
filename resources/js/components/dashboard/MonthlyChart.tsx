@@ -10,7 +10,7 @@ type MonthlyChartProps = {
     strongest: { month: number; amount: string } | null;
 };
 
-const HEIGHT = 224;
+const HEIGHT = 244;
 const PAD = { top: 12, right: 8, bottom: 28, left: 44 };
 
 /** Šířka kontejneru, aby se SVG kreslilo v pixelech (písmo se při zmenšení nezmenšuje). */
@@ -51,7 +51,7 @@ export default function MonthlyChart({ year, previousYear, months, strongest }: 
             ),
         [months],
     );
-    const ticks = [0, 0.5, 1].map((fraction) => max * fraction);
+    const ticks = [0, 0.25, 0.5, 0.75, 1].map((fraction) => max * fraction);
     const y = (value: number) => PAD.top + plotHeight - (value / max) * plotHeight;
 
     const slot = plotWidth / 12;
@@ -129,7 +129,7 @@ export default function MonthlyChart({ year, previousYear, months, strongest }: 
                                     y={y(previous)}
                                     width={barWidth}
                                     height={Math.max(2, y(0) - y(previous))}
-                                    rx="3"
+                                    rx="4"
                                     fill="var(--fill-strong)"
                                 />
                             )}
@@ -187,20 +187,6 @@ export default function MonthlyChart({ year, previousYear, months, strongest }: 
                     </div>
                 </div>
             )}
-
-            <div className="text-label-2 mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] leading-4">
-                <span className="inline-flex items-center gap-1.5">
-                    <i className="bg-accent inline-block size-2 rounded-full" aria-hidden="true" />
-                    {year}
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                    <i
-                        className="bg-fill-strong inline-block size-2 rounded-full"
-                        aria-hidden="true"
-                    />
-                    {previousYear}
-                </span>
-            </div>
 
             {/* Totéž jako tabulka pro čtečky; SVG je jen obrázek. */}
             <table className="sr-only">
