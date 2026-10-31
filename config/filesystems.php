@@ -47,6 +47,27 @@ return [
             'report' => false,
         ],
 
+        // Lokální kopie šifrovaných záloh (mimo disk `local`, aby se zálohy nezálohovaly).
+        'backups' => [
+            'driver' => 'local',
+            'root' => storage_path('app/backups'),
+            'throw' => true,
+            'report' => false,
+        ],
+
+        // Off-site záloha: S3-kompatibilní úložiště (Backblaze B2). Bez nastavení se nepoužije.
+        'backup' => [
+            'driver' => 's3',
+            'key' => env('BACKUP_S3_KEY'),
+            'secret' => env('BACKUP_S3_SECRET'),
+            'region' => env('BACKUP_S3_REGION'),
+            'bucket' => env('BACKUP_S3_BUCKET'),
+            'endpoint' => env('BACKUP_S3_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+            'throw' => true,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
