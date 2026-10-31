@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Domain\Backup\BackupStatus;
 use App\Domain\Invoices\InvoiceListQuery;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -50,6 +51,8 @@ class HandleInertiaRequests extends Middleware
             // Chyba akce, která neskončila validací: { message, href?, label? }.
             'error' => fn () => $request->session()->get('error'),
             // Počet faktur po splatnosti do štítku v menu: jeden COUNT, jen pro přihlášené.
+            // Banner „záloha je stará / neproběhla“: jen pro přihlášené.
+            'backupWarning' => fn () => $user instanceof User ? BackupStatus::warning() : null,
             'overdueInvoices' => fn () => $user instanceof User ? InvoiceListQuery::overdueCount() : 0,
         ];
     }

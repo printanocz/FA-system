@@ -33,13 +33,13 @@ describe('healthcheck', function () {
         $this->get('/_health', ['X-Health-Token' => ''])->assertNotFound();
     });
 
-    it('returns only the status, database, version and maintenance flag with the right token', function () {
+    it('returns only the status, database, version, maintenance flag and backup age with the right token', function () {
         config(['deploy.health_token' => 'secret-health-token']);
         file_put_contents($this->versionFile, "abc123def\n");
 
         $this->getJson('/_health', ['X-Health-Token' => 'secret-health-token'])
             ->assertOk()
-            ->assertExactJson(['app' => 'ok', 'db' => 'ok', 'version' => 'abc123def', 'maintenance' => false]);
+            ->assertExactJson(['app' => 'ok', 'db' => 'ok', 'version' => 'abc123def', 'maintenance' => false, 'backup_age_hours' => null]);
     });
 
     it('reports an unknown version before the first deployment', function () {

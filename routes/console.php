@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Dokončení nasazení (značka deploy.pending). Musí běžet i v údržbovém režimu, jinak by nikdy neskončil.
 Schedule::command('app:post-deploy')->everyMinute()->evenInMaintenanceMode();
+
+// Denní záloha (dump DB + archivní PDF, šifrovaně). Hlídá ji banner v aplikaci a /_health.
+Schedule::command('app:backup:run')->dailyAt('02:30')->withoutOverlapping();

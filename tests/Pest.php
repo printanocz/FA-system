@@ -32,6 +32,9 @@ pest()
         $this->withoutVite();
         // Archivní PDF a další soubory se v testech nikdy nezapisují na skutečný disk.
         Storage::fake('local');
+        // Zálohy se v testech nikdy nezapisují do storage/app/backups ani off-site.
+        Storage::fake('backups');
+        Storage::fake('backup');
     })
     ->in('Feature');
 

@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Settings;
 use App\Actions\Settings\UpdateCompanyProfile;
 use App\Actions\Settings\UpdateDocumentSettings;
 use App\Actions\Settings\UpdateEmailSettings;
+use App\Domain\Backup\BackupService;
+use App\Domain\Backup\BackupStatus;
 use App\Domain\Documents\NumberSeriesService;
 use App\Domain\Mail\EmailSettings;
 use App\Domain\Mail\EmailTemplate;
 use App\Domain\Settings\DocumentSettings;
 use App\Http\Controllers\Controller;
+use App\Models\Backup;
 use App\Models\BankAccount;
 use App\Models\CompanyProfile;
 use App\Models\NumberSeries;
@@ -56,6 +59,7 @@ class SettingsController extends Controller
             ],
             'emails' => $emails->all(),
             'emailVariables' => EmailTemplate::VARIABLES,
+            'backup' => $this->backupProps(),
             'bankAccounts' => BankAccount::query()->orderByDesc('is_default')->orderBy('id')->get()
                 ->map(fn (BankAccount $account): array => [
                     'id' => $account->id,
@@ -117,5 +121,33 @@ class SettingsController extends Controller
         });
 
         return back();
+    }
+
+    /**
+     * Stav záloh pro sekci Záloha dat: poslední úspěšná, posledních 10 běhů a upozornění na chybějící klíč nebo off-site.
+     *
+     * @return array<string, mixed>
+     */
+    private function backupProps(): array
+    {
+        $last = BackupStatus::lastSuccess();
+        $present = fn (?Backup $backup): ?array => $backup === null ? null : [
+            'id' => $backup->id,
+            'at' => $backup->created_at->toIso8601String(),
+            'status' => $backup->status,
+            'filename' => $backup->filename,
+            'size' => $backup->size,
+            'local' => $backup->stored_local,
+            'remote' => $backup->stored_remote,
+            'error' => $backup->error,
+        ];
+
+        return [
+            'key_set' => (string) config('backup.key') !== '',
+            'offsite' => BackupService::remoteConfigured(),
+            'last' => $present($last),
+            'recent' => Backup::query()->latest('created_at')->latest('id')->limit(10)->get()
+                ->map(fn (Backup $backup): ?array => $present($backup))->values(),
+        ];
     }
 }

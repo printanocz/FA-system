@@ -10,4 +10,6 @@ export type SharedProps = {
     error?: string | FlashError | null;
     /** Počet faktur po splatnosti (štítek u „Faktury vydané“ v menu). */
     overdueInvoices?: number;
+    /** Banner: poslední úspěšná záloha je stará nebo žádná neproběhla. */
+    backupWarning?: { message: string; age_hours: number | null } | null;
 };
