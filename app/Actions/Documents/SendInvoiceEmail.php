@@ -26,6 +26,9 @@ use Throwable;
  */
 final class SendInvoiceEmail
 {
+    /** Nejkratší odstup mezi dvěma upomínkami téže faktury. */
+    public const REMINDER_COOLDOWN_MINUTES = 5;
+
     public function __construct(
         private readonly InvoicePdf $pdf,
         private readonly EmailSettings $settings,
@@ -141,6 +144,12 @@ final class SendInvoiceEmail
 
             if (! $open || $document->computedStatus()?->value !== 'overdue') {
                 throw new InvalidDocumentStateException('Upomínku lze poslat jen u faktury po splatnosti.');
+            }
+
+            // Ochrana proti dvojímu odeslání (dvojklik, opakovaný požadavek): stav z databáze, ne z načteného modelu.
+            $last = Document::query()->whereKey($document->getKey())->value('last_reminder_at');
+            if ($last !== null && Carbon::parse($last)->gt(Carbon::now()->subMinutes(self::REMINDER_COOLDOWN_MINUTES))) {
+                throw new InvalidDocumentStateException('Upomínka už byla před chvílí odeslána. Další půjde poslat nejdříve za '.self::REMINDER_COOLDOWN_MINUTES.' minut.');
             }
         }
     }

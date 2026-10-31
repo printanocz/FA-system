@@ -13,16 +13,21 @@ class ContactFactory extends Factory
     /** @return array<string, mixed> */
     public function definition(): array
     {
+        // Deterministické hodnoty: náhodná jména a e-maily z Fakeru občas obsahovala hledaný text
+        // (např. „nic“ v monica@…) a vyhledávací testy tím nárazově padaly.
+        static $sequence = 0;
+        $n = ++$sequence;
+
         return [
             'type' => 'company',
-            'name' => fake()->company(),
-            'ico' => (string) fake()->numerify('########'),
+            'name' => "Firma {$n}",
+            'ico' => sprintf('9%07d', $n),
             'dic' => null,
-            'street' => fake()->streetAddress(),
-            'city' => fake()->city(),
-            'zip' => fake()->numerify('#####'),
+            'street' => "Ulice {$n}",
+            'city' => 'Město',
+            'zip' => sprintf('%05d', 90000 + $n % 10000),
             'country' => 'CZ',
-            'email' => fake()->unique()->safeEmail(),
+            'email' => "kontakt-{$n}@example.test",
             'email_cc' => null,
             'phone' => null,
             'default_due_days' => null,

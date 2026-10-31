@@ -326,3 +326,58 @@ describe('email settings', function () {
             ->has('emailVariables.dni_po_splatnosti'));
     });
 });
+
+describe('reminder double-send protection', function () {
+    it('refuses a second reminder within five minutes and allows it later', function () {
+        Mail::fake();
+        $invoice = mailInvoice();
+        Carbon::setTestNow('2026-10-31 10:00:00');
+
+        $this->post("/faktury/{$invoice->id}/odeslat", mailPayload(['type' => 'reminder']))->assertSessionHas('status');
+        $this->post("/faktury/{$invoice->id}/odeslat", mailPayload(['type' => 'reminder']))->assertSessionHas('error');
+
+        Mail::assertSent(InvoiceMail::class, 1);
+        expect($invoice->fresh()->reminders_count)->toBe(1);
+
+        Carbon::setTestNow('2026-10-31 10:06:00');
+        $this->post("/faktury/{$invoice->id}/odeslat", mailPayload(['type' => 'reminder']))->assertSessionHas('status');
+
+        Mail::assertSent(InvoiceMail::class, 2);
+        expect($invoice->fresh()->reminders_count)->toBe(2);
+    });
+
+    it('does not limit sending the invoice itself', function () {
+        Mail::fake();
+        $invoice = mailInvoice();
+
+        $this->post("/faktury/{$invoice->id}/odeslat", mailPayload())->assertSessionHas('status');
+        $this->post("/faktury/{$invoice->id}/odeslat", mailPayload())->assertSessionHas('status');
+
+        Mail::assertSent(InvoiceMail::class, 2);
+    });
+
+    it('tells the sheet about a reminder sent within seven days only', function () {
+        Mail::fake();
+        $invoice = mailInvoice();
+        Carbon::setTestNow('2026-10-29 10:00:00');
+        $this->post("/faktury/{$invoice->id}/odeslat", mailPayload(['type' => 'reminder']));
+
+        Carbon::setTestNow('2026-10-31 10:00:00');
+        $this->get("/faktury/{$invoice->id}")->assertInertia(fn (Assert $page) => $page->where('email.last_reminder_at', '2026-10-29'));
+
+        Carbon::setTestNow('2026-11-07 10:00:00');
+        $this->get("/faktury/{$invoice->id}")->assertInertia(fn (Assert $page) => $page->where('email.last_reminder_at', null));
+    });
+});
+
+describe('factories used by search tests', function () {
+    it('create neutral data that cannot match the search terms of the tests', function () {
+        $contact = Contact::factory()->create();
+
+        foreach (['nov', 'nic', 'dtp', 'loga', 'pek', 'hrub', 'svob', 'fakturace', '270 82'] as $term) {
+            expect(mb_strtolower($contact->name.' '.$contact->email))->not->toContain($term);
+        }
+        expect($contact->ico)->toMatch('/^9\d{7}$/')
+            ->and(Contact::factory()->create()->email)->not->toBe($contact->email);
+    });
+});

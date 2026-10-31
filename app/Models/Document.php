@@ -38,6 +38,8 @@ use Illuminate\Support\Facades\DB;
  * @property Carbon|null $valid_until
  * @property Carbon|null $paid_at
  * @property Carbon|null $sent_at
+ * @property Carbon|null $last_reminder_at
+ * @property int $reminders_count
  * @property Carbon|null $locked_at
  * @property string|null $pdf_path
  * @property string|null $pdf_sha256

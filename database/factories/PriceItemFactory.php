@@ -13,8 +13,11 @@ class PriceItemFactory extends Factory
     /** @return array<string, mixed> */
     public function definition(): array
     {
+        static $sequence = 0;
+        $n = ++$sequence;
+
         return [
-            'name' => fake()->words(3, true),
+            'name' => "Položka {$n}",
             'code' => null,
             'unit' => 'hod',
             'unit_price' => '400.00',
