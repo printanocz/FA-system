@@ -4,7 +4,9 @@ use App\Domain\Backup\BackupCrypto;
 use App\Domain\Backup\BackupService;
 use App\Domain\Backup\BackupStatus;
 use App\Domain\Backup\DatabaseDumper;
+use App\Domain\Backup\DataExport;
 use App\Domain\Backup\RetentionPolicy;
+use App\Domain\Documents\DocumentType;
 use App\Models\Backup;
 use App\Models\Contact;
 use App\Models\Document;
@@ -71,6 +73,17 @@ describe('database dump', function () {
     });
 });
 
+describe('database dump settings', function () {
+    it('dumps as utf8mb4 with DROP TABLE in the PHP dumper', function () {
+        $settings = app(DatabaseDumper::class)->phpDumperSettings();
+
+        expect($settings['default-character-set'])->toBe('utf8mb4')
+            ->and($settings['add-drop-table'])->toBeTrue()
+            ->and($settings['single-transaction'])->toBeTrue()
+            ->and(DatabaseDumper::CHARSET)->toBe('utf8mb4');
+    });
+});
+
 describe('running a backup', function () {
     it('stores an encrypted backup locally with the database and the archive PDFs', function () {
         $key = backupKey();
@@ -91,6 +104,14 @@ describe('running a backup', function () {
             ->toContain('database.sql')
             ->toContain('MANIFEST.json')
             ->toContain('storage/private/documents/2026/2026061.pdf');
+    });
+
+    it('works in storage/app/backup-work and removes it afterwards', function () {
+        backupKey();
+
+        app(BackupService::class)->run();
+
+        expect(glob(storage_path('app/backup-work').'/*') ?: [])->toBe([]);
     });
 
     it('also uploads off-site when the storage is configured', function () {
@@ -172,9 +193,10 @@ describe('decrypt command', function () {
 });
 
 describe('data export', function () {
-    it('contains the PDFs of issued invoices and the CSV files', function () {
+    it('contains the PDFs of issued documents by type and the CSV files', function () {
         $invoice = issueInvoice(draftInvoice([[1, 14500], [2, 600]], ['contact_id' => Contact::factory()->create(['name' => 'Pekárna Hrubý'])->id]), '2026-10-12');
         draftInvoice([[1, 100]]);
+        Document::factory()->quote()->create(['contact_id' => Contact::factory()->create(['name' => 'Nabídkový zákazník'])->id]);
         PriceItem::factory()->create(['name' => 'Návrh loga', 'code' => 'LOGO']);
 
         $response = $this->get('/nastaveni/export')->assertOk();
@@ -188,13 +210,48 @@ describe('data export', function () {
         }
 
         expect($names)->toContain("faktury-pdf/Faktura-{$invoice->number}.pdf")
-            ->toContain('faktury.csv', 'polozky.csv', 'uhrady.csv', 'kontakty.csv', 'cenik.csv')
-            ->and(collect($names)->filter(fn ($name) => str_starts_with($name, 'faktury-pdf/'))->count())->toBe(1)
-            ->and((string) $zip->getFromName("faktury-pdf/Faktura-{$invoice->number}.pdf"))->toStartWith('%PDF')
-            ->and((string) $zip->getFromName('faktury.csv'))->toContain($invoice->number)->toContain('Pekárna Hrubý')
-            ->and((string) $zip->getFromName('polozky.csv'))->toContain('14500.00')
+            ->toContain('doklady.csv', 'polozky.csv', 'uhrady.csv', 'kontakty.csv', 'cenik.csv')
+            ->not->toContain('faktury.csv')
+            ->and(collect($names)->filter(fn ($name) => str_ends_with($name, '.pdf'))->count())->toBe(1)
+            ->and((string) $zip->getFromName("faktury-pdf/Faktura-{$invoice->number}.pdf"))->toStartWith('%PDF');
+
+        $doklady = (string) $zip->getFromName('doklady.csv');
+        expect($doklady)->toContain('typ;cislo;stav')
+            ->toContain("faktura;{$invoice->number};")
+            ->toContain('nabídka;koncept-')
+            ->toContain('Pekárna Hrubý')
+            ->and((string) $zip->getFromName('polozky.csv'))->toContain("faktura;{$invoice->number};1;")->toContain('14500.00')
             ->and((string) $zip->getFromName('cenik.csv'))->toContain('"Návrh loga";LOGO');
-        expect(Document::query()->count())->toBe(2);
+        expect(Document::query()->count())->toBe(3);
+    });
+
+    it('protects text columns against spreadsheet formulas but leaves numbers alone', function () {
+        PriceItem::factory()->create(['name' => '=HYPERLINK("http://x")', 'code' => '@SUM(1)', 'note' => '-1+1', 'unit_price' => '-250.00']);
+        Contact::factory()->create(['name' => "\t+cmd", 'note' => 'běžná poznámka']);
+
+        $response = $this->get('/nastaveni/export')->assertOk();
+        $zip = new ZipArchive;
+        $zip->open($response->baseResponse->getFile()->getPathname());
+
+        $cenik = (string) $zip->getFromName('cenik.csv');
+        expect($cenik)->toContain("'=HYPERLINK")->toContain("'@SUM(1)")->toContain("'-1+1")
+            ->toContain(';-250.00;')->not->toContain("'-250.00")
+            ->and((string) $zip->getFromName('kontakty.csv'))->toContain("'\t+cmd")->toContain('běžná poznámka');
+    });
+
+    it('names types and folders in Czech and guards only formula starts', function () {
+        expect(DataExport::typeLabel(DocumentType::Proforma))->toBe('zálohová faktura')
+            ->and(DataExport::typeLabel(DocumentType::CreditNote))->toBe('dobropis')
+            ->and(DataExport::pdfFolder(DocumentType::Quote))->toBe('nabidky-pdf')
+            ->and(DataExport::guardFormula('=1+1'))->toBe("'=1+1")
+            ->and(DataExport::guardFormula('a=b'))->toBe('a=b')
+            ->and(DataExport::guardFormula(''))->toBe('');
+    });
+
+    it('builds the ZIP in storage/app/backup-work', function () {
+        $response = $this->get('/nastaveni/export')->assertOk();
+
+        expect($response->baseResponse->getFile()->getPathname())->toStartWith(storage_path('app/backup-work'));
     });
 
     it('requires a login', function () {

@@ -2,6 +2,7 @@
 
 namespace App\Domain\Backup;
 
+use App\Domain\Documents\DocumentType;
 use App\Domain\Pdf\InvoicePdf;
 use App\Models\Contact;
 use App\Models\Document;
@@ -13,63 +14,67 @@ use Throwable;
 use ZipArchive;
 
 /**
- * Nešifrovaný export dat ke stažení: PDF všech vystavených faktur a CSV (faktury, položky,
+ * Nešifrovaný export dat ke stažení: PDF vystavených dokladů (složky podle typu) a CSV (doklady, položky,
  * úhrady, kontakty, ceník). Vytváří se za běhu v dočasném souboru, nikam se neukládá.
  */
 class DataExport
 {
     public function __construct(private readonly InvoicePdf $pdf) {}
 
-    /** Vytvoří ZIP v dočasném souboru a vrátí jeho cestu; volající ho po odeslání smaže. */
+    /** Vytvoří ZIP v dočasném souboru (storage/app/backup-work) a vrátí jeho cestu; volající ho po odeslání smaže. */
     public function build(): string
     {
         if (! class_exists(ZipArchive::class)) {
             throw new BackupException('Na serveru chybí PHP rozšíření zip.');
         }
 
-        $path = tempnam(sys_get_temp_dir(), 'splatno-export-');
-        if ($path === false) {
-            throw new BackupException('Dočasný soubor exportu nejde vytvořit.');
-        }
+        $path = WorkDirectory::tempFile('export');
 
         $zip = new ZipArchive;
         if ($zip->open($path, ZipArchive::OVERWRITE | ZipArchive::CREATE) !== true) {
+            @unlink($path);
             throw new BackupException('ZIP exportu nejde vytvořit.');
         }
 
         try {
-            $invoices = Document::query()->where('type', 'invoice')->with(['contact', 'items', 'payments'])->orderBy('id')->get();
+            $documents = Document::query()->with(['contact', 'items', 'payments'])->orderBy('id')->get();
 
-            foreach ($invoices as $invoice) {
-                if ($invoice->isLocked() && $invoice->number !== null) {
-                    $zip->addFromString('faktury-pdf/Faktura-'.preg_replace('/[^A-Za-z0-9._-]+/', '_', $invoice->number).'.pdf', $this->pdf->contents($invoice));
+            foreach ($documents as $document) {
+                if ($document->isLocked() && $document->number !== null) {
+                    $zip->addFromString(
+                        self::pdfFolder($document->type).'/'.self::pdfName($document),
+                        $this->pdf->contents($document),
+                    );
                 }
             }
 
-            $zip->addFromString('faktury.csv', $this->csv(
-                ['cislo', 'stav', 'odberatel', 'ico', 'datum_vystaveni', 'datum_splatnosti', 'vs', 'mena', 'zaklad', 'dph', 'zaokrouhleni', 'celkem', 'uhrazeno', 'odeslano', 'uhrazeno_dne'],
-                $invoices->map(fn (Document $d): array => [
-                    $this->number($d), $d->status->value,
+            $zip->addFromString('doklady.csv', $this->csv(
+                ['typ', 'cislo', 'stav', 'odberatel', 'ico', 'datum_vystaveni', 'datum_splatnosti', 'vs', 'mena', 'zaklad', 'dph', 'zaokrouhleni', 'celkem', 'uhrazeno', 'odeslano', 'uhrazeno_dne'],
+                $documents->map(fn (Document $d): array => [
+                    self::typeLabel($d->type), $this->number($d), $d->status->value,
                     $d->buyer_snapshot['name'] ?? $d->contact?->name,
                     $d->buyer_snapshot['ico'] ?? $d->contact?->ico,
                     $d->issue_date?->toDateString(), $d->due_date?->toDateString(), $d->vs, $d->currency,
                     $d->subtotal, $d->vat_total, $d->rounding, $d->total, $d->paid_total,
                     $d->sent_at?->toDateTimeString(), $d->paid_at?->toDateString(),
                 ])->all(),
+                textColumns: [0, 1, 2, 3, 4, 7, 8],
             ));
 
             $zip->addFromString('polozky.csv', $this->csv(
-                ['faktura', 'poradi', 'nazev', 'popis', 'mnozstvi', 'jednotka', 'cena_za_jednotku', 'celkem'],
-                $invoices->flatMap(fn (Document $d) => $d->items->map(fn (DocumentItem $i): array => [
-                    $this->number($d), $i->position, $i->name, $i->description, $i->qty, $i->unit, $i->unit_price, $i->line_total,
+                ['typ', 'cislo', 'poradi', 'nazev', 'popis', 'mnozstvi', 'jednotka', 'cena_za_jednotku', 'celkem'],
+                $documents->flatMap(fn (Document $d) => $d->items->map(fn (DocumentItem $i): array => [
+                    self::typeLabel($d->type), $this->number($d), $i->position, $i->name, $i->description, $i->qty, $i->unit, $i->unit_price, $i->line_total,
                 ]))->all(),
+                textColumns: [0, 1, 3, 4, 6],
             ));
 
             $zip->addFromString('uhrady.csv', $this->csv(
-                ['faktura', 'castka', 'mena', 'datum', 'zpusob', 'poznamka'],
-                $invoices->flatMap(fn (Document $d) => $d->payments->map(fn (Payment $p): array => [
-                    $this->number($d), $p->amount, $p->currency, $p->paid_at->toDateString(), $p->method->value, $p->note,
+                ['typ', 'cislo', 'castka', 'mena', 'datum', 'zpusob', 'poznamka'],
+                $documents->flatMap(fn (Document $d) => $d->payments->map(fn (Payment $p): array => [
+                    self::typeLabel($d->type), $this->number($d), $p->amount, $p->currency, $p->paid_at->toDateString(), $p->method->value, $p->note,
                 ]))->all(),
+                textColumns: [0, 1, 3, 5, 6],
             ));
 
             $zip->addFromString('kontakty.csv', $this->csv(
@@ -79,6 +84,7 @@ class DataExport
                     implode(', ', $c->email_cc ?? []), $c->phone, $c->default_due_days, $c->default_discount_percent,
                     $c->note, $c->archived_at?->toDateString(),
                 ])->all(),
+                textColumns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12],
             ));
 
             $zip->addFromString('cenik.csv', $this->csv(
@@ -86,9 +92,10 @@ class DataExport
                 PriceItem::query()->orderBy('id')->get()->map(fn (PriceItem $p): array => [
                     $p->name, $p->code, $p->unit, $p->unit_price, $p->currency, $p->vat_rate, $p->note, $p->archived_at?->toDateString(),
                 ])->all(),
+                textColumns: [0, 1, 2, 4, 6],
             ));
 
-            $zip->addFromString('INFO.txt', 'Export dat Splatno, '.Carbon::now()->format('j. n. Y H:i')."\nCSV: UTF-8, oddělovač středník, desetinná tečka.\n");
+            $zip->addFromString('INFO.txt', 'Export dat Splatno, '.Carbon::now()->format('j. n. Y H:i')."\nCSV: UTF-8, oddělovač středník, desetinná tečka.\nDoklady (doklady.csv, polozky.csv, uhrady.csv) jsou propojené sloupci typ + cislo.\nTextové hodnoty začínající znaky = + - @ nebo tabulátorem mají na začátku apostrof (ochrana před vzorci v Excelu).\n");
 
             if (! $zip->close()) {
                 throw new BackupException('ZIP exportu se nepodařilo dokončit.');
@@ -114,13 +121,58 @@ class DataExport
         return $document->number ?? 'koncept-'.$document->id;
     }
 
+    /** Česky pojmenovaný typ dokladu pro sloupec `typ`. */
+    public static function typeLabel(DocumentType $type): string
+    {
+        return match ($type) {
+            DocumentType::Invoice => 'faktura',
+            DocumentType::Quote => 'nabídka',
+            DocumentType::Proforma => 'zálohová faktura',
+            DocumentType::CreditNote => 'dobropis',
+        };
+    }
+
+    /** Složka s PDF podle typu dokladu. */
+    public static function pdfFolder(DocumentType $type): string
+    {
+        return match ($type) {
+            DocumentType::Invoice => 'faktury-pdf',
+            DocumentType::Quote => 'nabidky-pdf',
+            DocumentType::Proforma => 'zalohove-faktury-pdf',
+            DocumentType::CreditNote => 'dobropisy-pdf',
+        };
+    }
+
+    private static function pdfName(Document $document): string
+    {
+        $prefix = match ($document->type) {
+            DocumentType::Invoice => 'Faktura',
+            DocumentType::Quote => 'Nabidka',
+            DocumentType::Proforma => 'Zalohova-faktura',
+            DocumentType::CreditNote => 'Dobropis',
+        };
+
+        return $prefix.'-'.preg_replace('/[^A-Za-z0-9._-]+/', '_', (string) $document->number).'.pdf';
+    }
+
     /**
-     * CSV pro české Excely: UTF-8 s BOM, oddělovač středník.
+     * Ochrana proti vzorcům v Excelu: textová hodnota začínající = + - @ nebo tabulátorem
+     * (případně CR) dostane na začátek apostrof. Čísla a data se nemění.
+     */
+    public static function guardFormula(string $value): string
+    {
+        return $value !== '' && in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true) ? "'".$value : $value;
+    }
+
+    /**
+     * CSV pro české Excely: UTF-8 s BOM, oddělovač středník. Sloupce v $textColumns jsou textové
+     * a chrání se proti vzorcům; ostatní (čísla, data) se zapisují beze změny.
      *
      * @param  list<string>  $header
      * @param  array<int, array<int, mixed>>  $rows
+     * @param  list<int>  $textColumns
      */
-    private function csv(array $header, array $rows): string
+    private function csv(array $header, array $rows, array $textColumns = []): string
     {
         $handle = fopen('php://temp', 'r+b');
         if ($handle === false) {
@@ -129,7 +181,12 @@ class DataExport
 
         fputcsv($handle, $header, ';', '"', '');
         foreach ($rows as $row) {
-            fputcsv($handle, array_map(fn (mixed $v): string => $v === null ? '' : (string) $v, $row), ';', '"', '');
+            $cells = [];
+            foreach (array_values($row) as $i => $value) {
+                $text = $value === null ? '' : (string) $value;
+                $cells[] = in_array($i, $textColumns, true) ? self::guardFormula($text) : $text;
+            }
+            fputcsv($handle, $cells, ';', '"', '');
         }
         rewind($handle);
         $content = (string) stream_get_contents($handle);

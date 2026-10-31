@@ -24,8 +24,13 @@ do souboru `splatno-RRRRMMDD-HHMMSS.zip.enc`. Soubor se uloží do `storage/app/
    **Klíč si uložte i mimo server** (správce hesel, papír v trezoru). Bez něj se zálohy nedají otevřít a server s klíčem
    může být to, co se ztratí.
 
-2. Off-site úložiště (doporučeno): v Backblaze B2 vytvořte **soukromý** bucket a Application Key jen pro něj
-   a doplňte do `.env`:
+2. Off-site úložiště (doporučeno): v Backblaze B2 nastavte přesně toto a doplňte hodnoty do `.env`:
+
+   - **Bucket: Private** (nikdy Public).
+   - **Lifecycle Settings: „Keep only the last version of the file“.** Jinak smazané (vyřazené) zálohy zůstanou v B2
+     jako skryté verze a dál zabírají místo i za ně platíte.
+   - **Application Key omezený jen na tento bucket** (Allow access to Bucket(s) → vybrat ho), ne Master Application Key.
+     Stačí čtení a zápis, včetně mazání souborů (potřebuje ho promazávání starých záloh).
 
    ```
    BACKUP_S3_KEY=<keyID>
@@ -67,11 +72,29 @@ do souboru `splatno-RRRRMMDD-HHMMSS.zip.enc`. Soubor se uloží do `storage/app/
 
 ## Export dat (bez šifrování)
 
-Nastavení › Záloha a export dat › **Exportovat data** stáhne ZIP s PDF všech vystavených faktur (`faktury-pdf/`) a CSV
-(`faktury.csv`, `polozky.csv`, `uhrady.csv`, `kontakty.csv`, `cenik.csv`; UTF-8, oddělovač středník). Vytvoří se při stažení a nikde se neukládá.
+Nastavení › Záloha a export dat › **Exportovat data** stáhne ZIP s PDF vystavených dokladů (do složek podle typu:
+`faktury-pdf/`, `nabidky-pdf/` …) a CSV (UTF-8, oddělovač středník):
+
+- `doklady.csv` – všechny typy dokladů, sloupec `typ` (faktura, nabídka, zálohová faktura, dobropis),
+- `polozky.csv`, `uhrady.csv` – navázané na doklad sloupci `typ` + `cislo`,
+- `kontakty.csv`, `cenik.csv`.
+
+Textové hodnoty začínající `=`, `+`, `-`, `@` nebo tabulátorem mají na začátku apostrof, aby je Excel nevyhodnotil jako vzorec;
+čísla a data se nemění. Vytvoří se při stažení a nikde se neukládá.
 Export **není záloha** (neobsahuje nastavení ani se nedá jednoduše vrátit do aplikace) a je nešifrovaný: neukládejte ho na sdílená místa.
+
+## Pracovní složka
+
+Záloha i export se skládají v `storage/app/backup-work/` (práva 0700, mimo disky `local` i `backups`, v `.gitignore`), ne v `/tmp`:
+na sdíleném hostingu může `open_basedir` `/tmp` blokovat a nešifrovaný dump tam nemá co dělat. Po dokončení (i po chybě)
+se dočasné soubory smažou; zbylé po pádu procesu lze bezpečně smazat ručně.
+
+## Spouštění přes `/_cron/{token}`
+
+Když scheduler běží přes URL, endpoint nastaví `ignore_user_abort(true)` a `set_time_limit(0)`, takže záloha doběhne,
+i když volající služba spojení přeruší nebo jí vyprší timeout.
 
 ## Databáze bez `mysqldump`
 
 Když hosting zakazuje `exec`/`proc_open` nebo `mysqldump` chybí, použije se čistě PHP dumper (`druidfi/mysqldump-php`),
-výsledek je stejný SQL soubor. Cestu k `mysqldump` mimo `PATH` lze zadat v `BACKUP_MYSQLDUMP_PATH`.
+výsledek je stejný SQL soubor. Dump je vždy v `utf8mb4` a před každým `CREATE TABLE` obsahuje `DROP TABLE IF EXISTS`. Cestu k `mysqldump` mimo `PATH` lze zadat v `BACKUP_MYSQLDUMP_PATH`.

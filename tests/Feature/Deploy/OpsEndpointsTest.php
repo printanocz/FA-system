@@ -99,6 +99,15 @@ describe('cron endpoint', function () {
         $this->get('/_cron/'.$token)->assertOk()->assertSee('ok');
     });
 
+    it('lets the scheduler finish even when the caller disconnects', function () use ($token) {
+        config(['deploy.cron_token' => $token]);
+        ignore_user_abort(false);
+
+        $this->get('/_cron/'.$token)->assertOk();
+
+        expect((bool) ignore_user_abort())->toBeTrue();
+    });
+
     it('works during maintenance, so the post-deploy can finish', function () use ($token) {
         config(['deploy.cron_token' => $token]);
         $this->artisan('down')->assertSuccessful();

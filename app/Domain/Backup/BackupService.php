@@ -56,10 +56,7 @@ class BackupService
 
         $now = Carbon::now();
         $filename = RetentionPolicy::filename($now);
-        $work = sys_get_temp_dir().'/splatno-backup-'.bin2hex(random_bytes(6));
-        if (! mkdir($work, 0700, true) && ! is_dir($work)) {
-            throw new BackupException('Pracovní složku zálohy nejde vytvořit.');
-        }
+        $work = WorkDirectory::create('backup');
 
         try {
             $sql = $work.'/database.sql';

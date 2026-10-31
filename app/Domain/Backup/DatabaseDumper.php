@@ -2,6 +2,7 @@
 
 namespace App\Domain\Backup;
 
+use Druidfi\Mysqldump\DumpSettings;
 use Druidfi\Mysqldump\Mysqldump;
 use Illuminate\Support\Facades\DB;
 use PDO;
@@ -18,6 +19,9 @@ use Throwable;
  */
 class DatabaseDumper
 {
+    /** Znaková sada dumpu; mysqldump (spatie) má DROP TABLE ve výchozím nastavení (--opt). */
+    public const CHARSET = 'utf8mb4';
+
     public function dump(string $path): void
     {
         $connection = DB::connection();
@@ -58,6 +62,20 @@ class DatabaseDumper
         return $binary === null ? null : dirname($binary);
     }
 
+    /**
+     * Nastavení čistě PHP dumperu (druidfi): utf8mb4, DROP TABLE před každým CREATE, konzistentní snímek.
+     *
+     * @return array<string, mixed>
+     */
+    public function phpDumperSettings(): array
+    {
+        return [
+            'single-transaction' => true,
+            'default-character-set' => DumpSettings::UTF8MB4,
+            'add-drop-table' => true,
+        ];
+    }
+
     /** @param  array<string, mixed>  $config */
     private function dumpMysql(array $config, string $path): void
     {
@@ -71,6 +89,7 @@ class DatabaseDumper
                 ->setHost((string) ($config['host'] ?? '127.0.0.1'))
                 ->setPort((int) ($config['port'] ?? 3306))
                 ->setDumpBinaryPath($directory)
+                ->setDefaultCharacterSet(self::CHARSET)
                 ->useSingleTransaction()
                 ->dumpToFile($path);
 
@@ -78,7 +97,7 @@ class DatabaseDumper
         }
 
         $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4', $config['host'] ?? '127.0.0.1', (int) ($config['port'] ?? 3306), $config['database']);
-        (new Mysqldump($dsn, (string) ($config['username'] ?? ''), (string) ($config['password'] ?? ''), ['single-transaction' => true]))->start($path);
+        (new Mysqldump($dsn, (string) ($config['username'] ?? ''), (string) ($config['password'] ?? ''), $this->phpDumperSettings()))->start($path);
     }
 
     private function dumpSqlite(PDO $pdo, string $path): void
