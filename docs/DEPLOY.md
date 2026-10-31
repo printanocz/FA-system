@@ -101,8 +101,11 @@ V repu: **Settings → Secrets and variables → Actions → New repository secr
 | `FTP_PROTOCOL` | `sftp`, nebo `ftp` (= FTP přes TLS) |
 | `HEALTH_TOKEN` | stejná hodnota jako v `.env` na serveru |
 | `SFTP_HOST_KEY` | *volitelné, jen SFTP*: řádek `known_hosts` serveru, např. výsledek `ssh-keyscan -t ed25519 <host>` |
+| `FTP_CERT_SHA1` | *volitelné, jen FTP*: SHA-1 otisk certifikátu serveru, pokud hosting nepoužívá certifikát od veřejné autority (chyba „The certificate issuer is unknown“). Otisk je v logu té chyby, např. `2E:8C:C9:…` |
 
 Nešifrované FTP pipeline nikdy nepoužije: `ftp` znamená vynucené TLS a ověřený certifikát. Bez `SFTP_HOST_KEY` se klíč SFTP serveru přijme při každém spojení (workflow na to upozorní); s ním se ověřuje.
+
+S `FTP_CERT_SHA1` pipeline certifikát stáhne ze serveru a použije ho jen tehdy, když jeho otisk přesně sedí. Při jiném otisku (např. po obnově certifikátu hostingem) nasazení skončí chybou a otisk se musí v secretu aktualizovat. Ověření se tím nevypíná, jen se připne na konkrétní server.
 
 Volitelně lze v **Settings → Secrets and variables → Actions → Variables** nastavit:
 

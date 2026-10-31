@@ -131,6 +131,8 @@ jobs:
           FTP_PROTOCOL: ${{ secrets.FTP_PROTOCOL }}
           # Volitelné: řádek known_hosts serveru (ssh-keyscan -t ed25519 host). Bez něj se SFTP klíč přijme při prvním spojení.
           SFTP_HOST_KEY: ${{ secrets.SFTP_HOST_KEY }}
+          # Volitelné, jen FTP (TLS): SHA-1 otisk certifikátu serveru, který nepodepsala veřejná autorita (hosting s vlastním certifikátem).
+          FTP_CERT_SHA1: ${{ secrets.FTP_CERT_SHA1 }}
         run: |
           mkdir -p "$RUNNER_TEMP/deploy"
           cd "$RUNNER_TEMP/deploy"
@@ -174,6 +176,24 @@ jobs:
               echo "set ftp:ssl-force true"
               echo "set ftp:ssl-protect-data true"
               echo "set ftp:ssl-allow true"
+              if [ -n "$FTP_CERT_SHA1" ]; then
+                # Připnutý certifikát: stáhne se ze serveru a použije se jen tehdy, když jeho otisk přesně sedí.
+                # Jiný certifikát (i veřejně důvěryhodný) nasazení zastaví. Název v certifikátu se pak nekontroluje,
+                # protože identitu serveru zaručuje otisk.
+                host_only="${FTP_HOST%%:*}"
+                port="21"
+                case "$FTP_HOST" in *:*) port="${FTP_HOST##*:}" ;; esac
+                openssl s_client -starttls ftp -connect "$host_only:$port" -servername "$host_only" </dev/null 2>/dev/null |
+                  openssl x509 -outform PEM > server-cert.pem
+                actual="$(openssl x509 -in server-cert.pem -noout -fingerprint -sha1 | cut -d= -f2 | tr -d ':' | tr 'a-f' 'A-F')"
+                expected="$(printf '%s' "$FTP_CERT_SHA1" | tr -d ': ' | tr 'a-f' 'A-F')"
+                if [ "$actual" != "$expected" ]; then
+                  echo "::error title=Certifikát FTP serveru nesedí::Otisk certifikátu serveru je $actual, v secretu FTP_CERT_SHA1 je $expected. Nasazení se zastavilo."
+                  exit 1
+                fi
+                echo "set ssl:ca-file \"$RUNNER_TEMP/deploy/server-cert.pem\""
+                echo "set ssl:check-hostname no"
+              fi
             fi
             # --env-password: heslo z proměnné LFTP_PASSWORD (bez něj by ji lftp ignoroval).
             echo "open --env-password -u \"$FTP_USER\" \"${FTP_PROTOCOL}://${FTP_HOST}\""
